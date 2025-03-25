@@ -1,0 +1,12 @@
+/home/maxgarces/dqr/target/debug/deps/libhttparse-2b12dd3cf7773762.rmeta: /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/lib.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/iter.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/macros.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/mod.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/swar.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/sse42.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/avx2.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/runtime.rs
+
+/home/maxgarces/dqr/target/debug/deps/httparse-2b12dd3cf7773762.d: /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/lib.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/iter.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/macros.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/mod.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/swar.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/sse42.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/avx2.rs /home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/runtime.rs
+
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/lib.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/iter.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/macros.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/mod.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/swar.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/sse42.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/avx2.rs:
+/home/maxgarces/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.10.1/src/simd/runtime.rs:

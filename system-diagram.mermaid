@@ -1,0 +1,30 @@
+flowchart TD
+    A[Client Application] -->|Sends JSON Request| B[JSON Validation API]
+    
+    subgraph "API Server"
+    B -->|1. Extract Key Fields| C{Match Key Fields}
+    C -->|2. Find Matching Rules| D[Load Applicable Validation Rules]
+    
+    E[(CSV Config File)] -->|"At Startup"| F[Rule Parser]
+    F -->|"Load Rules"| G[Validation Rules Repository]
+    G -->|"Provide Rules"| D
+    
+    D -->|3. Apply Rules| H[Validation Engine]
+    H -->|4. Evaluate JSON| I{Validation Results}
+    
+    I -->|Valid| J[Generate Success Response]
+    I -->|Invalid| K[Generate Error Response with Details]
+    
+    J -->|5. Return Response| L[HTTP Response Handler]
+    K -->|5. Return Response| L
+    end
+    
+    L -->|Returns Validation Result| A
+
+    classDef configFile fill:#f9f,stroke:#333,stroke-width:2px
+    classDef process fill:#bbf,stroke:#333,stroke-width:1px
+    classDef decision fill:#fdd,stroke:#333,stroke-width:1px
+    
+    class E configFile
+    class B,D,F,G,H,J,K,L process
+    class C,I decision

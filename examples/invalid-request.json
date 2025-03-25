@@ -1,0 +1,15 @@
+{
+  "data": {
+    "name": "Jane Smith",
+    "age": "thirty",
+    "email": "j@e",
+    "address": {},
+    "items": [
+      {"id": "", "quantity": "five"},
+      {"quantity": 10}
+    ],
+    "metadata": {
+      "tags": ["personal", 123]
+    }
+  }
+}
