@@ -37,6 +37,8 @@ pub struct ValidationRule {
     pub depends_on_selector: String,
     #[serde(default = "String::new")]
     pub depends_on_condition: String,
+    #[serde(default = "default_empty_map")]
+    pub parameters: std::collections::HashMap<String, serde_json::Value>,
 }
 
 fn default_journey() -> String {
@@ -45,6 +47,10 @@ fn default_journey() -> String {
 
 fn default_system() -> String {
     "ALL".to_string()
+}
+
+fn default_empty_map() -> std::collections::HashMap<String, serde_json::Value> {
+    std::collections::HashMap::new()
 }
 
 impl ValidationResponse {
