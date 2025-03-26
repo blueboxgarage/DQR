@@ -1,0 +1,23 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "numbers": 1,
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "J",
+                  "last": "Smith"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

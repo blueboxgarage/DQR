@@ -71,8 +71,28 @@ impl ValidationEngine {
                 rule_id: rule.id.clone(),
             }])?;
         
+        // Handle min_length check for names when individuals.numbers=1 first
+        if rule.condition == "min_length_when_single" {
+            // First check if individuals.numbers=1
+            if let Ok(numbers_selection) = jsonpath_lib::select(json, "$.application.individuals.numbers") {
+                if let Some(numbers) = numbers_selection.first() {
+                    if numbers.is_number() && numbers.as_i64() == Some(1) {
+                        // Check each selected value's length
+                        for (idx, value) in selection.iter().enumerate() {
+                            if !value.is_string() || value.as_str().unwrap().len() <= 1 {
+                                return Err(vec![ValidationError {
+                                    path: format!("{} (item {})", rule.selector, idx),
+                                    message: rule.error_message.clone(),
+                                    rule_id: rule.id.clone(),
+                                }]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         // Handle required field check
-        if rule.condition == "required" {
+        else if rule.condition == "required" {
             // If no values match and condition is required, that's an error
             if selection.is_empty() {
                 return Err(vec![ValidationError {
