@@ -102,6 +102,37 @@ impl ValidationEngine {
         
         log::debug!("Applying rule {}: {} on {}", rule.id, rule.condition, rule.selector);
         
+        // Check dependency condition if it exists
+        if !rule.depends_on_selector.is_empty() && !rule.depends_on_condition.is_empty() {
+            log::debug!("Rule has dependency: {} {}", rule.depends_on_selector, rule.depends_on_condition);
+            
+            // Get the dependency value
+            let dep_selection = jsonpath_lib::select(json, &rule.depends_on_selector)
+                .map_err(|e| vec![ValidationError {
+                    path: rule.depends_on_selector.clone(),
+                    message: format!("Invalid dependency JSON path: {}", e),
+                    rule_id: rule.id.clone(),
+                }])?;
+                
+            // If dependency selector doesn't match anything, skip this rule
+            if dep_selection.is_empty() {
+                log::debug!("Dependency not found, skipping rule");
+                return Ok(());
+            }
+            
+            // Check if the dependency condition is met
+            let dep_result = self.evaluate_condition(&dep_selection[0], &rule.depends_on_condition);
+            log::debug!("Dependency condition result: {}", dep_result);
+            
+            // If dependency condition is not met, skip this rule
+            if !dep_result {
+                log::debug!("Dependency condition not met, skipping rule");
+                return Ok(());
+            }
+            
+            log::debug!("Dependency condition met, continuing with rule");
+        }
+        
         // For required fields, we need special handling for nested paths
         if rule.condition == "required" {
             // If selector is like $.payment.type, we need to handle missing paths
@@ -222,6 +253,29 @@ impl ValidationEngine {
                         if let Some(s) = value.as_str() {
                             return s.len() <= max_len;
                         }
+                    }
+                }
+                false
+            },
+            _ if condition.starts_with("equals:") => {
+                if let Some(expected_val) = condition.strip_prefix("equals:") {
+                    let expected_val = expected_val.trim();
+                    
+                    // Handle different value types
+                    if let Ok(expected_num) = expected_val.parse::<i64>() {
+                        if let Some(actual_num) = value.as_i64() {
+                            return actual_num == expected_num;
+                        }
+                    } else if let Ok(expected_float) = expected_val.parse::<f64>() {
+                        if let Some(actual_float) = value.as_f64() {
+                            return (actual_float - expected_float).abs() < f64::EPSILON;
+                        }
+                    } else if expected_val == "true" && value.is_boolean() {
+                        return value.as_bool().unwrap_or(false);
+                    } else if expected_val == "false" && value.is_boolean() {
+                        return !value.as_bool().unwrap_or(true);
+                    } else if let Some(actual_str) = value.as_str() {
+                        return actual_str == expected_val;
                     }
                 }
                 false

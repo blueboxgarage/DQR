@@ -33,6 +33,10 @@ pub struct ValidationRule {
     pub journey: String,
     #[serde(default = "default_system")]
     pub system: String,
+    #[serde(default = "String::new")]
+    pub depends_on_selector: String,
+    #[serde(default = "String::new")]
+    pub depends_on_condition: String,
 }
 
 fn default_journey() -> String {

@@ -162,16 +162,16 @@ Rules are defined in a CSV file with the following columns:
 - `error_message`: Human-readable error message
 - `journey`: The validation journey where this rule applies (e.g., "DEFAULT", "ALL_CHECKS", "FAST_CHECK")
 - `system`: The system this rule belongs to (e.g., "CUSTOMER", "INVENTORY", "CHECKOUT")
+- `depends_on_selector`: Optional JSON Path selector for a field this rule depends on
+- `depends_on_condition`: Optional condition that must be met by the dependency field for this rule to apply
 
 Example rules:
 
 ```csv
-id,selector,condition,key_fields,error_message,journey,system
-rule1,$.name,required,name,"Name field is required",DEFAULT,CUSTOMER
-rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER
-rule3,$.email,min_length:5,email,"Email must be at least 5 characters long",ALL_CHECKS,CUSTOMER
-rule4,$.items[*].quantity,is_number,items,"Item quantity must be a number",FAST_CHECK,INVENTORY
-rule5,$.payment.type,required,payment,"Payment type is required",PAYMENT_FLOW,CHECKOUT
+id,selector,condition,key_fields,error_message,journey,system,depends_on_selector,depends_on_condition
+rule1,$.name,required,name,"Name field is required",DEFAULT,CUSTOMER,,
+rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER,,
+01_applicant_name_length,$.applicants.names.first,min_length:3,applicants,"First name must be at least 3 characters long",DEFAULT_TEST,ACQ_TEST,$.applicants.number,equals:1
 ```
 
 ### Journey and System Filtering
@@ -197,6 +197,7 @@ rule5,$.payment.type,required,payment,"Payment type is required",PAYMENT_FLOW,CH
 - `is_object` - Field must be an object
 - `min_length:N` - String must have at least N characters
 - `max_length:N` - String must have at most N characters
+- `equals:VALUE` - Field must equal the specified value (string, number, boolean)
 - `regex:PATTERN` - String must match the regular expression (placeholder implementation)
 
 ## Health Check
