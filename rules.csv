@@ -1,2 +1,2 @@
 id,selector,condition,key_fields,error_message,journey,system,depends_on_selector,depends_on_condition
-001_first_name_required,$.data.application.individuals[*].names[*].name.first,required,application.individuals.names.name,"First name is required",DEFAULT,ALL,,
+001_first_name_required,$.application.individuals[*].names[*].name.first,required,application.individuals.names.name,"First name is required",DEFAULT,ALL,,
