@@ -14,31 +14,41 @@ impl ValidationEngine {
         ValidationEngine { rule_repository }
     }
 
+    // Get the relevant rules for a specific journey and system combination
+    pub fn get_rules_for_journey_system(&self, journey: &str, system: &str) -> Vec<ValidationRule> {
+        // Get all rules from repository
+        let all_fields: Vec<String> = vec!["*".to_string()]; // Wildcard to get all rules
+        let mut all_rules = self.rule_repository.get_rules_for_key_fields(&all_fields);
+        
+        // Filter rules based on journey and system
+        all_rules.retain(|rule| {
+            // Match by journey - if journey is ALL_CHECKS, include all rules
+            let journey_match = journey == "ALL_CHECKS" || 
+                                rule.journey == journey || 
+                                (journey == "DEFAULT" && rule.journey == "DEFAULT");
+            
+            // Match by system - if rule's system is ALL, it applies to all systems
+            let system_match = rule.system == "ALL" || rule.system == system;
+            
+            journey_match && system_match
+        });
+        
+        all_rules
+    }
+
     pub fn validate(
         &self, 
         json: &Value, 
         journey: &str, 
         system: &str
     ) -> Result<ValidationResponse, DqrError> {
-        // Get all rules from repository
-        let all_fields: Vec<String> = vec!["*".to_string()]; // Wildcard to get all rules
-        let rules = self.rule_repository.get_rules_for_key_fields(&all_fields);
+        // Get applicable rules for this journey and system
+        let rules = self.get_rules_for_journey_system(journey, system);
         
         // Apply validation rules
         let mut errors = Vec::new();
         
         for rule in rules {
-            // Check if rule applies to this journey/system
-            let journey_match = journey == "ALL_CHECKS" || 
-                               rule.journey == journey || 
-                               (journey == "DEFAULT" && rule.journey == "DEFAULT");
-            
-            let system_match = rule.system == "ALL" || rule.system == system;
-            
-            if !journey_match || !system_match {
-                continue;
-            }
-            
             // Apply the rule
             if let Err(validation_errors) = self.apply_rule(json, &rule) {
                 errors.extend(validation_errors);
