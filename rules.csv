@@ -1,11 +1,2 @@
 id,selector,condition,key_fields,error_message,journey,system,depends_on_selector,depends_on_condition
-rule1,$.name,required,name,"Name field is required",DEFAULT,CUSTOMER,,
-rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER,,
-rule3,$.email,is_string,email,"Email must be a string",DEFAULT,CUSTOMER,,
-rule4,$.email,min_length:5,email,"Email must be at least 5 characters long",ALL_CHECKS,CUSTOMER,,
-rule5,$.address.city,required,address.city,"City is required in address",DEFAULT,CUSTOMER,,
-rule6,$.items[*].id,required,items,"Each item must have an ID",DEFAULT,INVENTORY,,
-rule7,$.items[*].quantity,is_number,items,"Item quantity must be a number",FAST_CHECK,INVENTORY,,
-rule8,$.metadata.tags[*],is_string,metadata.tags,"Tags must be strings",ALL_CHECKS,ANALYTICS,,
-rule9,$.payment.type,required,payment,"Payment type is required",PAYMENT_FLOW,CHECKOUT,,
-01_applicant_name_length,$.applicants.names.first,min_length:3,applicants,"First name must be at least 3 characters long",DEFAULT_TEST,ACQ_TEST,$.applicants.number,equals:1
+001_first_name_required,$.data.application.individuals[*].names[*].name.first,required,application.individuals.names.name,"First name is required",DEFAULT,ALL,,

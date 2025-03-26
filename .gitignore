@@ -1,3 +1,6 @@
+# Local Test Files
+/tests/
+
 # Rust build directory
 /target/
 

@@ -1,17 +1,20 @@
 {
   "data": {
-    "name": "Jane Smith",
-    "age": "thirty",
-    "email": "j@e",
-    "address": {},
-    "items": [
-      {"id": "", "quantity": "five"},
-      {"quantity": 10}
-    ],
-    "metadata": {
-      "tags": ["personal", 123]
+    "application": {
+      "individuals": [
+        {
+          "names": [
+            {
+              "name": {
+                "first": "",
+                "last": "Smith"
+              }
+            }
+          ]
+        }
+      ]
     }
   },
-  "journey": "ALL_CHECKS",
-  "system": "INVENTORY"
+  "journey": "DEFAULT",
+  "system": "ALL"
 }
