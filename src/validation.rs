@@ -213,6 +213,7 @@ impl ValidationEngine {
             log::debug!("Condition {} on value {:?} result: {}", rule.condition, selected, result);
             
             if !result {
+                log::debug!("Validation failed for rule {}: {}", rule.id, rule.error_message);
                 errors.push(ValidationError {
                     path: format!("{} (item {})", rule.selector, idx),
                     message: rule.error_message.clone(),
@@ -230,6 +231,8 @@ impl ValidationEngine {
     
     fn evaluate_condition(&self, value: &Value, condition: &str) -> bool {
         // For now, we'll implement some basic conditions
+        log::debug!("Evaluating condition: '{}' on value: {:?}", condition, value);
+        
         match condition {
             "required" => !value.is_null(),
             "is_number" => value.is_number(),
@@ -240,9 +243,16 @@ impl ValidationEngine {
             _ if condition.starts_with("min_length:") => {
                 if let Some(min_len) = condition.strip_prefix("min_length:") {
                     if let Ok(min_len) = min_len.trim().parse::<usize>() {
+                        log::debug!("Checking min_length: {} against value", min_len);
                         if let Some(s) = value.as_str() {
-                            return s.len() >= min_len;
+                            let result = s.len() >= min_len;
+                            log::debug!("String length: {}, min required: {}, result: {}", s.len(), min_len, result);
+                            return result;
+                        } else {
+                            log::debug!("Value is not a string for min_length check");
                         }
+                    } else {
+                        log::debug!("Could not parse min_length parameter");
                     }
                 }
                 false
