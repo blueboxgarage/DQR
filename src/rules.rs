@@ -10,6 +10,12 @@ pub struct RuleRepository {
     rules: HashMap<String, Vec<ValidationRule>>,
 }
 
+impl Default for RuleRepository {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RuleRepository {
     pub fn new() -> Self {
         RuleRepository {
@@ -41,7 +47,7 @@ impl RuleRepository {
             for field in &key_fields {
                 self.rules
                     .entry(field.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(rule.clone());
             }
         }
@@ -53,7 +59,7 @@ impl RuleRepository {
     pub fn add_rule(&mut self, key_field: String, rule: ValidationRule) {
         self.rules
             .entry(key_field)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(rule);
     }
 

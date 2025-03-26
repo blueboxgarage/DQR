@@ -34,6 +34,7 @@ pub async fn validate_json(
 }
 
 pub async fn health_check() -> impl Responder {
+    log::info!("Health check endpoint called");
     HttpResponse::Ok().json(serde_json::json!({ "status": "healthy" }))
 }
 
