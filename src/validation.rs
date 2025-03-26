@@ -65,9 +65,8 @@ impl ValidationEngine {
     fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(), Vec<ValidationError>> {
         // Apply JSON path selector to find the values to validate
         let selection = jsonpath_lib::select(json, &rule.selector)
-            .map_err(|e| vec![ValidationError {
+            .map_err(|_| vec![ValidationError {
                 path: rule.selector.clone(),
-                message: format!("Invalid JSON path: {}", e),
                 rule_id: rule.id.clone(),
             }])?;
         
@@ -82,7 +81,6 @@ impl ValidationEngine {
                             if !value.is_string() || value.as_str().unwrap().len() <= 1 {
                                 return Err(vec![ValidationError {
                                     path: format!("{} (item {})", rule.selector, idx),
-                                    message: rule.error_message.clone(),
                                     rule_id: rule.id.clone(),
                                 }]);
                             }
@@ -97,7 +95,6 @@ impl ValidationEngine {
             if selection.is_empty() {
                 return Err(vec![ValidationError {
                     path: rule.selector.clone(),
-                    message: rule.error_message.clone(),
                     rule_id: rule.id.clone(),
                 }]);
             }
@@ -107,7 +104,6 @@ impl ValidationEngine {
                 if value.is_null() || (value.is_string() && value.as_str().unwrap().is_empty()) {
                     return Err(vec![ValidationError {
                         path: format!("{} (item {})", rule.selector, idx),
-                        message: rule.error_message.clone(),
                         rule_id: rule.id.clone(),
                     }]);
                 }

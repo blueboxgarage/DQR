@@ -1,3 +1,3 @@
-id,selector,condition,key_fields,error_message,journey,system,depends_on_selector,depends_on_condition
-001_first_name_required,$.application.individuals.data[*].names[*].name.first,required,application.individuals.names.name,"First name is required",DEFAULT,ALL,,
-002_name_length_when_single,$.application.individuals.data[*].names[*].name.first,min_length_when_single,application.individuals.names.name,"First name must be greater than 1 character when individuals.numbers=1",DEFAULT,ALL,,
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition
+001_first_name_required,$.application.individuals.data[*].names[*].name.first,required,application.individuals.names.name,DEFAULT,ALL,,
+002_name_length_when_single,$.application.individuals.data[*].names[*].name.first,min_length_when_single,application.individuals.names.name,DEFAULT,ALL,,

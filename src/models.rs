@@ -18,7 +18,6 @@ pub struct ValidationResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ValidationError {
     pub path: String,
-    pub message: String,
     pub rule_id: String,
 }
 
@@ -28,7 +27,6 @@ pub struct ValidationRule {
     pub selector: String,
     pub condition: String,
     pub key_fields: String,
-    pub error_message: String,
     #[serde(default = "default_journey")]
     pub journey: String,
     #[serde(default = "default_system")]
