@@ -1,0 +1,32 @@
+# Rust build directory
+/target/
+
+# Git directory
+/.git/
+
+# IDE and editor files
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+
+# Debug files
+*.log
+
+# Temporary files created by our test scripts
+payment-test.json
+payment-fixed.json
