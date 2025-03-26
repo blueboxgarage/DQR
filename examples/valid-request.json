@@ -14,5 +14,7 @@
     "metadata": {
       "tags": ["personal", "customer"]
     }
-  }
+  },
+  "journey": "DEFAULT",
+  "system": "CUSTOMER"
 }

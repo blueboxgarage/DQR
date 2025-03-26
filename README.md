@@ -9,6 +9,8 @@ DQR is a configurable JSON validation service that allows teams to update valida
 - CSV configuration for easy rule management
 - Detailed error responses with path and error message
 - Efficient rule matching based on key fields
+- Journey-based validation for different processing paths
+- System-based filtering for multi-team usage
 
 ## Project Structure
 
@@ -123,9 +125,16 @@ Content-Type: application/json
     "metadata": {
       "tags": ["personal", "customer"]
     }
-  }
+  },
+  "journey": "DEFAULT",
+  "system": "CUSTOMER"
 }
 ```
+
+The request includes two optional parameters:
+
+- `journey`: The validation journey to use (e.g., "DEFAULT", "FAST_CHECK", "ALL_CHECKS", "PAYMENT_FLOW")
+- `system`: The system identifier for rule filtering (e.g., "CUSTOMER", "INVENTORY", "CHECKOUT")
 
 ### Response Format
 
@@ -151,15 +160,32 @@ Rules are defined in a CSV file with the following columns:
 - `condition`: Validation condition (e.g., `required`, `is_number`, `min_length:5`)
 - `key_fields`: Fields that trigger this rule (comma-separated)
 - `error_message`: Human-readable error message
+- `journey`: The validation journey where this rule applies (e.g., "DEFAULT", "ALL_CHECKS", "FAST_CHECK")
+- `system`: The system this rule belongs to (e.g., "CUSTOMER", "INVENTORY", "CHECKOUT")
 
 Example rules:
 
 ```csv
-id,selector,condition,key_fields,error_message
-rule1,$.name,required,name,"Name field is required"
-rule2,$.age,is_number,age,"Age must be a number"
-rule3,$.email,min_length:5,email,"Email must be at least 5 characters long"
+id,selector,condition,key_fields,error_message,journey,system
+rule1,$.name,required,name,"Name field is required",DEFAULT,CUSTOMER
+rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER
+rule3,$.email,min_length:5,email,"Email must be at least 5 characters long",ALL_CHECKS,CUSTOMER
+rule4,$.items[*].quantity,is_number,items,"Item quantity must be a number",FAST_CHECK,INVENTORY
+rule5,$.payment.type,required,payment,"Payment type is required",PAYMENT_FLOW,CHECKOUT
 ```
+
+### Journey and System Filtering
+
+- **Journey**: Controls which validation rules are applied based on the validation context:
+  - `DEFAULT`: Standard validation rules for everyday usage
+  - `FAST_CHECK`: Minimal validation for high-performance needs
+  - `ALL_CHECKS`: Extensive validation for critical operations
+  - Custom journeys: Define your own validation paths
+
+- **System**: Allows multiple systems to use the same API with different validation rules:
+  - Each system can define its own rules for the same fields
+  - Rules with system="ALL" apply to all systems
+  - Enables shared validation infrastructure with team-specific rules
 
 ### Supported Validation Conditions
 
@@ -194,3 +220,7 @@ Response:
 - Add caching for improved performance
 - Support multiple rule sources (database, API)
 - Add admin interface for rule management
+- Support conditional validation rules (if/then/else)
+- Improve error messages with more context
+- Add journey-specific error handling and reporting
+- Support multiple languages for error messages

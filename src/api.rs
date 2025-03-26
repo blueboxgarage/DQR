@@ -11,7 +11,20 @@ pub async fn validate_json(
     req: web::Json<ValidationRequest>,
     state: web::Data<ApiState>,
 ) -> impl Responder {
-    match state.validation_engine.validate(&req.data) {
+    // Extract journey and system from the request
+    let journey = &req.journey;
+    let system = &req.system;
+    
+    log::info!("Validating request for journey: {}, system: {}", journey, system);
+    
+    // Log the rules being applied
+    let rules = state.validation_engine.get_rules_for_journey_system(journey, system);
+    for rule in &rules {
+        log::info!("Rule {} will be applied for {}:{}: [{}] {}", 
+                  rule.id, journey, system, rule.selector, rule.condition);
+    }
+    
+    match state.validation_engine.validate(&req.data, journey, system) {
         Ok(response) => HttpResponse::Ok().json(response),
         Err(err) => {
             log::error!("Validation error: {}", err);

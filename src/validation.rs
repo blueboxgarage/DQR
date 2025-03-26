@@ -15,12 +15,52 @@ impl ValidationEngine {
         ValidationEngine { rule_repository }
     }
 
-    pub fn validate(&self, json: &Value) -> Result<ValidationResponse, DqrError> {
+    // Get the relevant rules for a specific journey and system combination
+    pub fn get_rules_for_journey_system(&self, journey: &str, system: &str) -> Vec<ValidationRule> {
+        // Get all rules from repository
+        let all_fields: Vec<String> = vec!["*".to_string()]; // Wildcard to get all rules
+        let mut all_rules = self.rule_repository.get_rules_for_key_fields(&all_fields);
+        
+        // Filter rules based on journey and system
+        all_rules.retain(|rule| {
+            // Match by journey - if journey is ALL_CHECKS, include all rules
+            let journey_match = journey == "ALL_CHECKS" || 
+                                rule.journey == journey || 
+                                (journey == "DEFAULT" && rule.journey == "DEFAULT");
+            
+            // Match by system - if rule's system is ALL, it applies to all systems
+            let system_match = rule.system == "ALL" || rule.system == system;
+            
+            journey_match && system_match
+        });
+        
+        all_rules
+    }
+    
+    pub fn validate(
+        &self, 
+        json: &Value, 
+        journey: &str, 
+        system: &str
+    ) -> Result<ValidationResponse, DqrError> {
         // Extract key fields from the JSON
         let key_fields = self.extract_key_fields(json)?;
         
         // Get applicable rules based on key fields
-        let rules = self.rule_repository.get_rules_for_key_fields(&key_fields);
+        let mut rules = self.rule_repository.get_rules_for_key_fields(&key_fields);
+        
+        // Filter rules based on journey and system
+        rules.retain(|rule| {
+            // Match by journey - if journey is ALL_CHECKS, include all rules
+            let journey_match = journey == "ALL_CHECKS" || 
+                                rule.journey == journey || 
+                                (journey == "DEFAULT" && rule.journey == "DEFAULT");
+            
+            // Match by system - if rule's system is ALL, it applies to all systems
+            let system_match = rule.system == "ALL" || rule.system == system;
+            
+            journey_match && system_match
+        });
         
         // Apply validation rules
         let mut errors = Vec::new();
@@ -60,6 +100,54 @@ impl ValidationEngine {
     fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(), Vec<ValidationError>> {
         let mut errors = Vec::new();
         
+        log::debug!("Applying rule {}: {} on {}", rule.id, rule.condition, rule.selector);
+        
+        // For required fields, we need special handling for nested paths
+        if rule.condition == "required" {
+            // If selector is like $.payment.type, we need to handle missing paths
+            
+            // Check if the parent path exists
+            if rule.selector.contains(".") {
+                let parent_path = rule.selector.rsplitn(2, '.').collect::<Vec<&str>>()[1].to_string();
+                log::debug!("Checking parent path: {}", parent_path);
+                
+                let parent_selection = jsonpath_lib::select(json, &parent_path)
+                    .map_err(|e| vec![ValidationError {
+                        path: parent_path.clone(),
+                        message: format!("Invalid JSON path: {}", e),
+                        rule_id: rule.id.clone(),
+                    }])?;
+                
+                // If parent exists but doesn't have the child property, that's an error
+                if !parent_selection.is_empty() {
+                    let child_prop = rule.selector.rsplitn(2, '.').collect::<Vec<&str>>()[0]
+                        .trim_end_matches(']')  // Handle array notation
+                        .trim_start_matches('[');
+                    
+                    log::debug!("Parent exists, checking child property: {}", child_prop);
+                    
+                    // Try direct property lookup for objects
+                    let child_exists = parent_selection.iter().any(|parent| {
+                        if let Value::Object(obj) = parent {
+                            obj.contains_key(child_prop)
+                        } else {
+                            false
+                        }
+                    });
+                    
+                    if !child_exists {
+                        log::debug!("Child property {} doesn't exist", child_prop);
+                        errors.push(ValidationError {
+                            path: rule.selector.clone(),
+                            message: rule.error_message.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                        return Err(errors);
+                    }
+                }
+            }
+        }
+        
         // Apply JSON path selector to find the values to validate
         let selection = jsonpath_lib::select(json, &rule.selector)
             .map_err(|e| vec![ValidationError {
@@ -67,15 +155,31 @@ impl ValidationEngine {
                 message: format!("Invalid JSON path: {}", e),
                 rule_id: rule.id.clone(),
             }])?;
+        
+        log::debug!("JSONPath selection result count: {}", selection.len());
+        if !selection.is_empty() {
+            log::debug!("Selection values: {:?}", selection);
+        }
             
-        // If no values match the selector, that's not an error (might be optional field)
+        // If no values match the selector
         if selection.is_empty() {
+            // For required fields with no matches, this is an error
+            if rule.condition == "required" {
+                log::debug!("Required field not found: {}", rule.selector);
+                errors.push(ValidationError {
+                    path: rule.selector.clone(),
+                    message: rule.error_message.clone(),
+                    rule_id: rule.id.clone(),
+                });
+                return Err(errors);
+            }
             return Ok(());
         }
         
         // For each selected value, apply the condition
         for (idx, selected) in selection.iter().enumerate() {
             let result = self.evaluate_condition(selected, &rule.condition);
+            log::debug!("Condition {} on value {:?} result: {}", rule.condition, selected, result);
             
             if !result {
                 errors.push(ValidationError {

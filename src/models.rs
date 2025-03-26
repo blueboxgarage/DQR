@@ -3,6 +3,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ValidationRequest {
     pub data: serde_json::Value,
+    #[serde(default = "default_journey")]
+    pub journey: String,
+    #[serde(default = "default_system")]
+    pub system: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,6 +29,18 @@ pub struct ValidationRule {
     pub condition: String,
     pub key_fields: String,
     pub error_message: String,
+    #[serde(default = "default_journey")]
+    pub journey: String,
+    #[serde(default = "default_system")]
+    pub system: String,
+}
+
+fn default_journey() -> String {
+    "DEFAULT".to_string()
+}
+
+fn default_system() -> String {
+    "ALL".to_string()
 }
 
 impl ValidationResponse {
