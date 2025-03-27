@@ -212,10 +212,57 @@ Response:
 }
 ```
 
+## Understanding Key Fields
+
+Key fields in the DQR system serve as an efficient indexing mechanism for validation rules:
+
+1. **Purpose**: 
+   - They identify which fields in your JSON data a particular rule applies to
+   - They create a mapping that allows the system to quickly look up relevant rules when validating specific parts of your data
+
+2. **Implementation**:
+   - In the rule definition, key_fields are comma-separated strings (e.g., `application.individuals.names.name`)
+   - The system splits these into individual fields and creates a HashMap where each field points to applicable rules
+   - This creates an efficient index for rule retrieval
+
+3. **Example**:
+   If you have a rule with `key_fields: "name,email"`, it means this rule applies when validating either the name or email fields in your JSON data.
+
+4. **Performance Benefit**:
+   Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data structure, making validation more efficient.
+
+## Requirements for Rule Nesting and Dependencies
+
+To support rule nesting and dependencies, the following changes would be needed:
+
+1. **Enhanced Rule Structure**:
+   - Expand the ValidationRule struct to support multiple dependencies
+   - Add support for complex dependency types beyond simple equality checks
+   - Implement a logical structure for nested rules (parent-child relationships)
+
+2. **Dependency Resolution Engine**:
+   - Create a general dependency resolution mechanism
+   - Add logic to determine rule evaluation order based on dependencies
+   - Implement cycle detection to prevent circular dependencies
+
+3. **Rule Condition Evaluation**:
+   - Develop a more robust condition evaluation system
+   - Support boolean logic (AND, OR, NOT) for complex conditions
+   - Allow conditions to reference other rule results
+
+4. **Data Structure Changes**:
+   - Create a hierarchical rule structure for nesting
+   - Implement a dependency graph to track relationships
+   - Store evaluation results for dependency checking
+
+5. **Validation Process Updates**:
+   - Modify the validation flow to handle rule dependencies
+   - Implement conditional rule execution based on parent rule results
+   - Add proper error propagation for dependency failures
+
 ## Future Enhancements
 
 - Add more validation conditions (regex, numeric ranges, enum values)
-- Support rule nesting and dependencies
 - Add caching for improved performance
 - Support multiple rule sources (database, API)
 - Add admin interface for rule management
