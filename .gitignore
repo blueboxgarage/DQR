@@ -1,8 +1,8 @@
 # Local Test Files
-/test_cases/.
+/test_cases/valid_v4_sample.json
 
 # Rust build directory
-/target/valid_v4_sample.json
+/target/
 
 # Git directory
 /.git/
