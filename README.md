@@ -7,7 +7,7 @@ DQR is a configurable JSON validation service that allows teams to update valida
 - Validate JSON payloads against configurable rules
 - Rule-based validation using JSON Path selectors
 - CSV configuration for easy rule management
-- Detailed error responses with path and error message
+- Detailed error responses
 - Efficient rule matching based on key fields
 - Journey-based validation for different processing paths
 - System-based filtering for multi-team usage
@@ -139,10 +139,9 @@ The request includes two optional parameters:
 ```json
 {
   "valid": true|false,
-  "errors": [
+  "s": [
     {
       "path": "$.field.path",
-      "message": "Error message",
       "rule_id": "rule_id"
     }
   ]
