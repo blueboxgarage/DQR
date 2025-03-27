@@ -1,18 +1,21 @@
 {
   "data": {
     "application": {
-      "individuals": [
-        {
-          "names": [
-            {
-              "name": {
-                "first": "",
-                "last": "Smith"
+      "individuals": {
+        "number": 1,
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "",
+                  "last": "Smith"
+                }
               }
-            }
-          ]
-        }
-      ]
+            ]
+          }
+        ]
+      }
     }
   },
   "journey": "DEFAULT",

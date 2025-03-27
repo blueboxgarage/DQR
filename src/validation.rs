@@ -70,10 +70,10 @@ impl ValidationEngine {
                 rule_id: rule.id.clone(),
             }])?;
         
-        // Handle min_length check for names when individuals.numbers=1 first
+        // Handle min_length check for names when individuals.number=1 first
         if rule.condition == "min_length_when_single" {
-            // First check if individuals.numbers=1
-            if let Ok(numbers_selection) = jsonpath_lib::select(json, "$.application.individuals.numbers") {
+            // First check if individuals.number=1
+            if let Ok(numbers_selection) = jsonpath_lib::select(json, "$.application.individuals.number") {
                 if let Some(numbers) = numbers_selection.first() {
                     if numbers.is_number() && numbers.as_i64() == Some(1) {
                         // Check each selected value's length
