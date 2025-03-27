@@ -22,10 +22,8 @@ DQR is a configurable JSON validation service that allows teams to update valida
   - `models.rs` - Data structures
   - `rules.rs` - Rule loading and management
   - `validation.rs` - Validation engine
-  - `validation_test.rs` - Unit tests
 - `rules.csv` - Sample validation rules
 - `examples/` - Example JSON payloads for testing
-- `.env` - Environment configuration
 
 ## Getting Started
 
@@ -44,7 +42,7 @@ cargo build
 
 ### Configuration
 
-DQR uses environment variables for configuration, which can be set in the `.env` file:
+DQR uses environment variables for configuration:
 
 - `DQR_HOST`: Host to bind the server to (default: 127.0.0.1)
 - `DQR_PORT`: Port to listen on (default: 8081)
@@ -95,10 +93,10 @@ cargo test
    curl -X POST -H "Content-Type: application/json" -d @examples/invalid-request.json http://localhost:8081/api/validate
    ```
 
-   Or use the included test script:
+   Or use the included test scripts in the test_cases directory:
    ```bash
-   chmod +x test-api.sh
-   ./test-api.sh
+   chmod +x test_cases/test-batch.sh
+   ./test_cases/test-batch.sh
    ```
 
 ## API Usage
