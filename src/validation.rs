@@ -1,4 +1,5 @@
 use serde_json::Value;
+use regex::Regex;
 
 use crate::error::DqrError;
 use crate::models::{ValidationError, ValidationRule, ValidationResponse};
@@ -70,46 +71,182 @@ impl ValidationEngine {
                 rule_id: rule.id.clone(),
             }])?;
         
-        // Handle min_length check for names when individuals.number=1 first
-        if rule.condition == "min_length_when_single" {
-            // First check if individuals.number=1
-            if let Ok(numbers_selection) = jsonpath_lib::select(json, "$.application.individuals.number") {
-                if let Some(numbers) = numbers_selection.first() {
-                    if numbers.is_number() && numbers.as_i64() == Some(1) {
-                        // Check each selected value's length
-                        for (idx, value) in selection.iter().enumerate() {
-                            if !value.is_string() || value.as_str().unwrap().len() <= 1 {
-                                return Err(vec![ValidationError {
-                                    path: format!("{} (item {})", rule.selector, idx),
+        // If no values match and condition is required, that's an error
+        if rule.condition == "required" && selection.is_empty() {
+            return Err(vec![ValidationError {
+                path: rule.selector.clone(),
+                rule_id: rule.id.clone(),
+            }]);
+        }
+        
+        // If selection is empty for non-required conditions, consider validation passed
+        if selection.is_empty() && rule.condition != "required" {
+            return Ok(());
+        }
+        
+        // Process each condition
+        let mut errors = Vec::new();
+        
+        for (idx, value) in selection.iter().enumerate() {
+            let path = format!("{} (item {})", rule.selector, idx);
+            
+            match rule.condition.as_str() {
+                "required" => {
+                    if value.is_null() || (value.is_string() && value.as_str().unwrap().is_empty()) {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                "is_number" => {
+                    if !value.is_number() {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                "is_string" => {
+                    if !value.is_string() {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                "is_boolean" => {
+                    if !value.is_boolean() {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                "is_array" => {
+                    if !value.is_array() {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                "is_object" => {
+                    if !value.is_object() {
+                        errors.push(ValidationError {
+                            path: path.clone(),
+                            rule_id: rule.id.clone(),
+                        });
+                    }
+                },
+                condition if condition.starts_with("min_length:") => {
+                    if let Some(min_length_str) = condition.strip_prefix("min_length:") {
+                        if let Ok(min_length) = min_length_str.parse::<usize>() {
+                            if !value.is_string() || value.as_str().unwrap().len() < min_length {
+                                errors.push(ValidationError {
+                                    path: path.clone(),
                                     rule_id: rule.id.clone(),
-                                }]);
+                                });
                             }
                         }
                     }
-                }
-            }
-        }
-        // Handle required field check
-        else if rule.condition == "required" {
-            // If no values match and condition is required, that's an error
-            if selection.is_empty() {
-                return Err(vec![ValidationError {
-                    path: rule.selector.clone(),
-                    rule_id: rule.id.clone(),
-                }]);
-            }
-            
-            // Check each selected value
-            for (idx, value) in selection.iter().enumerate() {
-                if value.is_null() || (value.is_string() && value.as_str().unwrap().is_empty()) {
-                    return Err(vec![ValidationError {
-                        path: format!("{} (item {})", rule.selector, idx),
-                        rule_id: rule.id.clone(),
-                    }]);
+                },
+                "min_length_when_single" => {
+                    // Special case for single applicant
+                    if let Ok(numbers_selection) = jsonpath_lib::select(json, "$.application.individuals.number") {
+                        if let Some(numbers) = numbers_selection.first() {
+                            if numbers.is_number() && numbers.as_i64() == Some(1) {
+                                if !value.is_string() || value.as_str().unwrap().len() <= 1 {
+                                    errors.push(ValidationError {
+                                        path: path.clone(),
+                                        rule_id: rule.id.clone(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                },
+                condition if condition.starts_with("max_length:") => {
+                    if let Some(max_length_str) = condition.strip_prefix("max_length:") {
+                        if let Ok(max_length) = max_length_str.parse::<usize>() {
+                            if !value.is_string() || value.as_str().unwrap().len() > max_length {
+                                errors.push(ValidationError {
+                                    path: path.clone(),
+                                    rule_id: rule.id.clone(),
+                                });
+                            }
+                        }
+                    }
+                },
+                condition if condition.starts_with("equals:") => {
+                    if let Some(expected_value) = condition.strip_prefix("equals:") {
+                        let matches = match value {
+                            Value::String(s) => s == expected_value,
+                            Value::Number(n) => {
+                                if let Ok(num) = expected_value.parse::<f64>() {
+                                    if let Some(val_num) = n.as_f64() {
+                                        (val_num - num).abs() < f64::EPSILON
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    false
+                                }
+                            },
+                            Value::Bool(b) => {
+                                if let Ok(expected_bool) = expected_value.parse::<bool>() {
+                                    *b == expected_bool
+                                } else {
+                                    false
+                                }
+                            },
+                            _ => false,
+                        };
+                        
+                        if !matches {
+                            errors.push(ValidationError {
+                                path: path.clone(),
+                                rule_id: rule.id.clone(),
+                            });
+                        }
+                    }
+                },
+                condition if condition.starts_with("regex:") => {
+                    if let Some(pattern) = condition.strip_prefix("regex:") {
+                        if value.is_string() {
+                            match Regex::new(pattern) {
+                                Ok(regex) => {
+                                    if !regex.is_match(value.as_str().unwrap()) {
+                                        errors.push(ValidationError {
+                                            path: path.clone(),
+                                            rule_id: rule.id.clone(),
+                                        });
+                                    }
+                                },
+                                Err(_) => {
+                                    // Invalid regex pattern - consider this a configuration error
+                                    // For now, we'll just skip this validation
+                                }
+                            }
+                        } else {
+                            errors.push(ValidationError {
+                                path: path.clone(),
+                                rule_id: rule.id.clone(),
+                            });
+                        }
+                    }
+                },
+                _ => {
+                    // Unknown condition - consider this a configuration error
+                    // For now, we'll just skip this validation
                 }
             }
         }
         
-        Ok(())
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
