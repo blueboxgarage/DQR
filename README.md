@@ -139,7 +139,7 @@ The request includes two optional parameters:
 ```json
 {
   "valid": true|false,
-  "s": [
+  "errors": [
     {
       "path": "$.field.path",
       "rule_id": "rule_id"
