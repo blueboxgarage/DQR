@@ -33,9 +33,20 @@ pub async fn validate_json(
     }
 }
 
-pub async fn health_check() -> impl Responder {
+pub async fn health_check(state: web::Data<ApiState>) -> impl Responder {
     log::info!("Health check endpoint called");
-    HttpResponse::Ok().json(serde_json::json!({ "status": "healthy" }))
+    
+    // Get cache statistics
+    let validation_cache_size = state.validation_engine.get_validation_cache_size();
+    let journey_system_cache_size = state.validation_engine.get_journey_system_cache_size();
+    
+    HttpResponse::Ok().json(serde_json::json!({ 
+        "status": "healthy",
+        "cache_stats": {
+            "validation_cache_size": validation_cache_size,
+            "journey_system_cache_size": journey_system_cache_size
+        }
+    }))
 }
 
 pub async fn start_server(

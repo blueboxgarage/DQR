@@ -1,5 +1,8 @@
 use serde_json::Value;
 use regex::Regex;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 use crate::error::DqrError;
 use crate::models::{ValidationError, ValidationRule, ValidationResponse};
@@ -8,33 +11,52 @@ use crate::rules::RuleRepository;
 #[derive(Clone)]
 pub struct ValidationEngine {
     rule_repository: RuleRepository,
+    // Cache for validation results
+    validation_cache: HashMap<u64, ValidationResponse>,
 }
 
 impl ValidationEngine {
     pub fn new(rule_repository: RuleRepository) -> Self {
-        ValidationEngine { rule_repository }
+        ValidationEngine { 
+            rule_repository,
+            validation_cache: HashMap::new(),
+        }
+    }
+    
+    // Helper method to calculate a hash for the validation inputs
+    fn calculate_hash(&self, json: &Value, journey: &str, system: &str) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        
+        // Hash the JSON data
+        let json_str = json.to_string();
+        json_str.hash(&mut hasher);
+        
+        // Hash the journey and system
+        journey.hash(&mut hasher);
+        system.hash(&mut hasher);
+        
+        hasher.finish()
+    }
+    
+    // Clear the validation cache
+    pub fn clear_validation_cache(&mut self) {
+        self.validation_cache.clear();
+    }
+    
+    // Get validation cache size
+    pub fn get_validation_cache_size(&self) -> usize {
+        self.validation_cache.len()
+    }
+    
+    // Get journey system cache size
+    pub fn get_journey_system_cache_size(&self) -> usize {
+        self.rule_repository.get_journey_system_cache_size()
     }
 
     // Get the relevant rules for a specific journey and system combination
     pub fn get_rules_for_journey_system(&self, journey: &str, system: &str) -> Vec<ValidationRule> {
-        // Get all rules from repository
-        let all_fields: Vec<String> = vec!["*".to_string()]; // Wildcard to get all rules
-        let mut all_rules = self.rule_repository.get_rules_for_key_fields(&all_fields);
-        
-        // Filter rules based on journey and system
-        all_rules.retain(|rule| {
-            // Match by journey - if journey is ALL_CHECKS, include all rules
-            let journey_match = journey == "ALL_CHECKS" || 
-                                rule.journey == journey || 
-                                (journey == "DEFAULT" && rule.journey == "DEFAULT");
-            
-            // Match by system - if rule's system is ALL, it applies to all systems
-            let system_match = rule.system == "ALL" || rule.system == system;
-            
-            journey_match && system_match
-        });
-        
-        all_rules
+        // Use the cached method from repository
+        self.rule_repository.get_rules_for_journey_system(journey, system)
     }
 
     pub fn validate(
@@ -43,6 +65,14 @@ impl ValidationEngine {
         journey: &str, 
         system: &str
     ) -> Result<ValidationResponse, DqrError> {
+        // Calculate hash for cache lookup
+        let cache_key = self.calculate_hash(json, journey, system);
+        
+        // Check cache first
+        if let Some(cached_result) = self.validation_cache.get(&cache_key) {
+            return Ok(cached_result.clone());
+        }
+        
         // Get applicable rules for this journey and system
         let rules = self.get_rules_for_journey_system(journey, system);
         
@@ -73,14 +103,78 @@ impl ValidationEngine {
             }
         }
         
-        if errors.is_empty() {
-            Ok(ValidationResponse::success())
+        // Create the response
+        let response = if errors.is_empty() {
+            ValidationResponse::success()
         } else {
-            Ok(ValidationResponse::failure(errors))
-        }
+            ValidationResponse::failure(errors)
+        };
+        
+        // Note: We can't modify the cache here in a &self method
+        // Cache will be updated separately with an explicit update method in the mutable version
+        
+        Ok(response)
     }
     
-    fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(bool, Vec<ValidationError>), DqrError> {
+    // Mutable version of validate that updates caches
+    pub fn validate_mut(
+        &mut self, 
+        json: &Value, 
+        journey: &str, 
+        system: &str
+    ) -> Result<ValidationResponse, DqrError> {
+        // Calculate hash for cache lookup
+        let cache_key = self.calculate_hash(json, journey, system);
+        
+        // Check cache first
+        if let Some(cached_result) = self.validation_cache.get(&cache_key) {
+            return Ok(cached_result.clone());
+        }
+        
+        // Get applicable rules and update rule cache
+        let rules = self.rule_repository.get_rules_for_journey_system(journey, system);
+        
+        // Apply validation rules
+        let mut errors = Vec::new();
+        
+        for rule in &rules {
+            // Skip conditional branch rules here - they'll be processed by their parent
+            if rule.is_conditional_branch() {
+                continue;
+            }
+            
+            // Apply the rule
+            match self.apply_rule(json, rule) {
+                Ok((condition_result, rule_errors)) => {
+                    // Add any errors from this rule
+                    errors.extend(rule_errors);
+                    
+                    // If this is a conditional root rule, process its branches
+                    if rule.is_condition_root() {
+                        let conditional_errors = self.process_conditional_rules(json, &rule.id, condition_result);
+                        errors.extend(conditional_errors);
+                    }
+                },
+                Err(e) => {
+                    log::error!("Error applying rule {}: {}", rule.id, e);
+                }
+            }
+        }
+        
+        // Create the response
+        let response = if errors.is_empty() {
+            ValidationResponse::success()
+        } else {
+            ValidationResponse::failure(errors)
+        };
+        
+        // Update the cache
+        self.validation_cache.insert(cache_key, response.clone());
+        
+        Ok(response)
+    }
+    
+    pub fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(bool, Vec<ValidationError>), DqrError> {
         // Check dependency condition first if it exists
         if !rule.depends_on_selector.is_empty() && !rule.depends_on_condition.is_empty() {
             // Apply the depends_on selector

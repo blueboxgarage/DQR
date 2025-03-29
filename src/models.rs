@@ -9,13 +9,13 @@ pub struct ValidationRequest {
     pub system: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResponse {
     pub valid: bool,
     pub errors: Vec<ValidationError>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
     pub path: String,
     pub rule_id: String,
