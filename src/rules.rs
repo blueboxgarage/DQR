@@ -8,7 +8,9 @@ use crate::models::ValidationRule;
 #[derive(Clone)]
 pub struct RuleRepository {
     rules: HashMap<String, Vec<ValidationRule>>,
-    conditional_rules: HashMap<String, (Vec<ValidationRule>, Vec<ValidationRule>)>,
+    pub conditional_rules: HashMap<String, (Vec<ValidationRule>, Vec<ValidationRule>)>,
+    // Cache for rules filtered by journey and system
+    journey_system_cache: HashMap<(String, String), Vec<ValidationRule>>,
 }
 
 impl Default for RuleRepository {
@@ -22,13 +24,21 @@ impl RuleRepository {
         RuleRepository {
             rules: HashMap::new(),
             conditional_rules: HashMap::new(),
+            journey_system_cache: HashMap::new(),
         }
+    }
+    
+    // Clear caches when rules change
+    pub fn clear_caches(&mut self) {
+        self.journey_system_cache.clear();
     }
 
     pub fn load_from_csv<P: AsRef<Path>>(
         &mut self,
         path: P,
     ) -> Result<(), DqrError> {
+        // Clear caches first
+        self.clear_caches();
         let file = File::open(path)?;
         let mut reader = csv::Reader::from_reader(file);
         
@@ -101,6 +111,9 @@ impl RuleRepository {
             .entry(key_field)
             .or_default()
             .push(rule);
+        
+        // Clear caches after rule changes
+        self.clear_caches();
     }
 
     pub fn get_rules_for_key_field(&self, key_field: &str) -> Vec<ValidationRule> {
@@ -140,6 +153,48 @@ impl RuleRepository {
         matched_rules.dedup_by(|a, b| a.id == b.id);
         
         matched_rules
+    }
+    
+    // Get rules filtered by journey and system (with caching)
+    pub fn get_rules_for_journey_system(&self, journey: &str, system: &str) -> Vec<ValidationRule> {
+        // Check if we have a cached result
+        let cache_key = (journey.to_string(), system.to_string());
+        if let Some(cached_rules) = self.journey_system_cache.get(&cache_key) {
+            return cached_rules.clone();
+        }
+        
+        // Get all rules
+        let all_fields: Vec<String> = vec!["*".to_string()]; // Wildcard to get all rules
+        let mut all_rules = self.get_rules_for_key_fields(&all_fields);
+        
+        // Filter rules based on journey and system
+        all_rules.retain(|rule| {
+            // Match by journey - if journey is ALL_CHECKS, include all rules
+            let journey_match = journey == "ALL_CHECKS" || 
+                                rule.journey == journey || 
+                                (journey == "DEFAULT" && rule.journey == "DEFAULT");
+            
+            // Match by system - if rule's system is ALL, it applies to all systems
+            let system_match = rule.system == "ALL" || rule.system == system;
+            
+            journey_match && system_match
+        });
+        
+        // Note: We can't modify the cache here in a &self method
+        // Cache will be updated separately with an explicit update method
+        
+        all_rules
+    }
+    
+    // Update the journey/system cache with a new entry
+    pub fn update_journey_system_cache(&mut self, journey: &str, system: &str, rules: Vec<ValidationRule>) {
+        let cache_key = (journey.to_string(), system.to_string());
+        self.journey_system_cache.insert(cache_key, rules);
+    }
+    
+    // Get journey/system cache size
+    pub fn get_journey_system_cache_size(&self) -> usize {
+        self.journey_system_cache.len()
     }
     
     // Get the conditional branches (then/else) for a specific rule ID

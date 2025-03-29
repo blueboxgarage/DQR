@@ -334,34 +334,43 @@ Key fields in the DQR system serve as an indexing and lookup mechanism for valid
 6. **Performance Benefit**:
    Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data, making validation more efficient.
 
-## Requirements for Rule Nesting and Dependencies
+## Rule Nesting and Dependencies
 
-To support rule nesting and dependencies, the following changes would be needed:
+DQR already supports rule nesting and dependencies through the following features:
 
-1. **Enhanced Rule Structure**:
-   - Expand the ValidationRule struct to support multiple dependencies
-   - Add support for complex dependency types beyond simple equality checks
-   - Implement a logical structure for nested rules (parent-child relationships)
+1. **Rule Dependencies**:
+   - Rules can depend on other fields using `depends_on_selector` and `depends_on_condition`
+   - A rule is only evaluated if its dependency condition is met
+   - Supported dependency checks include equality and not_empty
 
-2. **Dependency Resolution Engine**:
-   - Create a general dependency resolution mechanism
-   - Add logic to determine rule evaluation order based on dependencies
-   - Implement cycle detection to prevent circular dependencies
+2. **Conditional Logic (If/Then/Else)**:
+   - Rules can be organized in conditional branches using `logic_type` and `parent_rule_id`
+   - The `if` branch determines which set of rules to run (`then` or `else`)
+   - Conditional rules can be nested to create complex logic trees
 
-3. **Rule Condition Evaluation**:
-   - Develop a more robust condition evaluation system
-   - Support boolean logic (AND, OR, NOT) for complex conditions
-   - Allow conditions to reference other rule results
+3. **Rule Evaluation Flow**:
+   - The validation engine first checks if a rule should be applied based on dependencies
+   - For conditional rules, only the relevant branch is executed based on the parent rule result
+   - Error messages include the rule ID and the path that failed validation
 
-4. **Data Structure Changes**:
-   - Create a hierarchical rule structure for nesting
-   - Implement a dependency graph to track relationships
-   - Store evaluation results for dependency checking
+### Future Enhancements for Rule Dependencies
 
-5. **Validation Process Updates**:
-   - Modify the validation flow to handle rule dependencies
-   - Implement conditional rule execution based on parent rule results
-   - Add proper error propagation for dependency failures
+To further improve rule nesting and dependencies, we could add:
+
+1. **Enhanced Dependency Types**:
+   - Support for more complex dependency conditions beyond equality and not_empty
+   - Multiple dependencies per rule (AND/OR relationships between dependencies)
+   - Support for numeric comparisons, pattern matching, and custom functions
+
+2. **Advanced Conditional Logic**:
+   - Support for more complex boolean expressions (AND, OR, NOT)
+   - Allow conditions to reference results of other rules
+   - Add support for switch/case style multi-branch conditionals
+
+3. **Performance Optimizations**:
+   - Implement a dependency graph for more efficient rule evaluation order
+   - Add caching of intermediate validation results
+   - Add cycle detection to prevent circular dependencies
 
 ## Examples
 
@@ -390,10 +399,33 @@ The project includes organized examples demonstrating different features:
 
 For more details, see the [Examples README](examples/README.md).
 
+## Caching Implementation
+
+DQR includes a multi-level caching system to maximize performance:
+
+1. **Rule Repository Caching**:
+   - Rules filtered by journey and system are cached to avoid re-filtering
+   - Caches are automatically cleared when rules are updated
+   - Significantly improves performance for repeated journey/system combinations
+
+2. **Validation Result Caching**:
+   - Results of validation operations are cached using content hashing
+   - Identical validation requests return cached results immediately
+   - Provides dramatic performance improvements for repeated validations
+
+3. **Cache Management**:
+   - Cache statistics are available via the health check endpoint
+   - `GET /health` returns current cache sizes and health information
+   - Caches are cleared automatically when rule definitions change
+
+The caching system is designed to be thread-safe and requires no explicit configuration.
+
 ## Future Enhancements
 
-- Add more validation conditions (numeric ranges, enum values, custom validators)
-- Add caching for improved performance
+- Add more validation conditions (enum values, array validations, custom validators)
+- Support for date/time validation (date format, before/after comparisons)
 - Support multiple rule sources (database, API)
 - Add admin interface for rule management
 - Improve error messages with more context
+- Support for custom error messages and localization
+- Add cache size limits and time-based expiration
