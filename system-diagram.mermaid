@@ -3,14 +3,25 @@ flowchart TD
     
     subgraph "API Server"
     B -->|1. Extract Key Fields| C{Match Key Fields}
-    C -->|2. Find Matching Rules| D[Load Applicable Validation Rules]
+    C -->|2. Find Rules by Keys| D[Load Applicable Validation Rules]
     
-    E[(CSV Config File)] -->|"At Startup"| F[Rule Parser]
-    F -->|"Load Rules"| G[Validation Rules Repository]
+    E[(Rules File)]:::configFile -->|"At Startup"| F[Rule Parser]
+    ENVVAR[ENV: RULES_FILE]:::env -->|"Configure"| F
+    F -->|"Parse & Load"| G[Validation Rules Repository]
     G -->|"Provide Rules"| D
     
-    D -->|3. Apply Rules| H[Validation Engine]
-    H -->|4. Evaluate JSON| I{Validation Results}
+    D -->|3a. Filter by Journey| JOURNEY{Journey Filter}
+    JOURNEY -->|3b. Apply Dependencies| DEP[Dependency Resolver]
+    DEP -->|3c. Apply Rules| H[Validation Engine]
+    
+    subgraph "Validation Engine"
+    H -->|4a. Check Conditionals| COND{Conditional Logic}
+    COND -->|If true| THEN[Then Rules]
+    COND -->|If false| ELSE[Else Rules]
+    THEN --> RESULTS[Collect Results]
+    ELSE --> RESULTS
+    RESULTS -->|4b. Evaluate| I{Validation Results}
+    end
     
     I -->|Valid| J[Generate Success Response]
     I -->|Invalid| K[Generate Error Response with Details]
@@ -24,7 +35,9 @@ flowchart TD
     classDef configFile fill:#f9f,stroke:#333,stroke-width:2px
     classDef process fill:#bbf,stroke:#333,stroke-width:1px
     classDef decision fill:#fdd,stroke:#333,stroke-width:1px
+    classDef env fill:#afa,stroke:#333,stroke-width:1px
     
     class E configFile
-    class B,D,F,G,H,J,K,L process
-    class C,I decision
+    class ENVVAR env
+    class B,D,F,G,DEP,H,THEN,ELSE,RESULTS,J,K,L process
+    class C,JOURNEY,COND,I decision
