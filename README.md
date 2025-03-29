@@ -246,22 +246,53 @@ Response:
 
 ## Understanding Key Fields
 
-Key fields in the DQR system serve as an efficient indexing mechanism for validation rules:
+Key fields in the DQR system serve as an indexing and lookup mechanism for validation rules:
 
 1. **Purpose**: 
-   - They identify which fields in your JSON data a particular rule applies to
-   - They create a mapping that allows the system to quickly look up relevant rules when validating specific parts of your data
+   - They determine when a rule should be triggered in the validation process
+   - They create an efficient index for quickly finding relevant rules
+   - They enable a single rule to apply to multiple related fields
 
-2. **Implementation**:
-   - In the rule definition, key_fields are comma-separated strings (e.g., `application.individuals.names.name`)
-   - The system splits these into individual fields and creates a HashMap where each field points to applicable rules
-   - This creates an efficient index for rule retrieval
+2. **How They Work**:
+   - When rules are loaded, they're indexed by each of their key_fields
+   - During validation, the system looks up all rules that match the fields being validated
+   - A rule is applied when ANY of its key_fields matches data in the document
 
-3. **Example**:
-   If you have a rule with `key_fields: "name,email"`, it means this rule applies when validating either the name or email fields in your JSON data.
+3. **Relation to Selectors**:
+   - The `selector` determines WHAT the rule validates (the actual JSON path)
+   - The `key_fields` determine WHEN the rule is triggered (the indexing)
+   - These can be different, allowing flexible validation patterns
 
-4. **Performance Benefit**:
-   Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data structure, making validation more efficient.
+4. **Practical Examples**:
+
+   **Example 1: Single Key Field**
+   ```csv
+   id,selector,condition,key_fields
+   email_format,$.user.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",user.email
+   ```
+   This rule validates the email format and is only triggered when processing the user.email field.
+
+   **Example 2: Multiple Key Fields**
+   ```csv
+   id,selector,condition,key_fields
+   email_format,$.user.primaryEmail,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$","user.primaryEmail,user.secondaryEmail,user.workEmail"
+   ```
+   This rule is triggered when ANY of the three email fields is present, but only validates the primaryEmail (based on selector).
+
+   **Example 3: Different Selector and Key Fields**
+   ```csv
+   id,selector,condition,key_fields
+   contact_required,$.user.contactInfo,required,"user.type,user.role"
+   ```
+   This rule checks if contactInfo exists but is triggered when processing either user.type or user.role.
+
+5. **Multiple Key Fields Use Case**:
+   - Validate related fields with the same rule (all email fields use same validation)
+   - Create category-based rules (all address fields trigger address validation rules)
+   - Optimize rule organization (fewer rules to manage)
+
+6. **Performance Benefit**:
+   Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data, making validation more efficient.
 
 ## Requirements for Rule Nesting and Dependencies
 
