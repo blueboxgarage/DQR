@@ -19,7 +19,7 @@ This directory contains example files and scripts demonstrating the different fe
   - `depends-on-example.json`: Sample data with "employed" status
   - `depends-on-unemployed.json`: Sample data with "unemployed" status
   - `test-depends-on.sh`: Script to demonstrate conditional validation
-  - `README-dependencies.md`: Detailed explanation of dependencies feature
+  - `README.md`: Detailed explanation of dependencies feature
 
 - `conditionals/`: Examples for if/then/else conditional validation
   - `user-payment-example.json`: Sample data with user and payment information
