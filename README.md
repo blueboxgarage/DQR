@@ -7,7 +7,7 @@ DQR is a configurable JSON validation service that allows teams to update valida
 - Validate JSON payloads against configurable rules
 - Rule-based validation using JSON Path selectors
 - CSV configuration for easy rule management
-- Detailed error responses with path and error message
+- Detailed  responses
 - Efficient rule matching based on key fields
 - Journey-based validation for different processing paths
 - System-based filtering for multi-team usage
@@ -16,7 +16,7 @@ DQR is a configurable JSON validation service that allows teams to update valida
 
 - `src/` - Rust source code
   - `api.rs` - HTTP API implementation
-  - `error.rs` - Error handling
+  - `.rs` -  handling
   - `lib.rs` - Library exports
   - `main.rs` - Application entry point
   - `models.rs` - Data structures
@@ -145,7 +145,6 @@ The request includes two optional parameters:
   "errors": [
     {
       "path": "$.field.path",
-      "message": "Error message",
       "rule_id": "rule_id"
     }
   ]
@@ -169,7 +168,7 @@ Rules are defined in a CSV file with the following columns:
 Example rules:
 
 ```csv
-id,selector,condition,key_fields,error_message,journey,system,depends_on_selector,depends_on_condition
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition
 rule1,$.name,required,name,"Name field is required",DEFAULT,CUSTOMER,,
 rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER,,
 01_applicant_name_length,$.applicants.names.first,min_length:3,applicants,"First name must be at least 3 characters long",DEFAULT_TEST,ACQ_TEST,$.applicants.number,equals:1
@@ -357,9 +356,3 @@ For more details, see the [Examples README](examples/README.md).
 - Support multiple rule sources (database, API)
 - Add admin interface for rule management
 - Improve error messages with more context
-- Add journey-specific error handling and reporting
-- Support multiple languages for error messages
-- Add custom user-defined functions for validation
-- Support cross-field validation (comparing multiple fields)
-- Implement validation result caching for faster repeated validations
-- Add rule versioning and rule deployment pipelines
