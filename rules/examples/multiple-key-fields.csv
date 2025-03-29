@@ -1,0 +1,5 @@
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition
+100_email_format_check,$.application.individuals.data[*].contact.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",application.individuals.contact.email,DEFAULT,ALL,,
+101_alternate_email_format_check,$.application.individuals.data[*].contact.alternate.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",application.individuals.contact.alternate.email,DEFAULT,ALL,,
+200_combined_email_format_check,$.application.individuals.data[*].contact.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$","application.individuals.contact.email,application.individuals.contact.alternate.email",DEFAULT,ALL,,
+201_phone_format_check,$.application.individuals.data[*].contact.phone,"regex:^[0-9]{3}-[0-9]{4}$","application.individuals.contact.phone,application.individuals.contact.alternate.phone",DEFAULT,ALL,,

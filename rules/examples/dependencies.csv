@@ -1,0 +1,6 @@
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition
+300_employment_status,$.application.individuals.data[*].employment.status,required,application.individuals.employment.status,DEFAULT,ALL,,
+301_employer_name_required,$.application.individuals.data[*].employment.employer.name,required,application.individuals.employment.employer.name,DEFAULT,ALL,$.application.individuals.data[*].employment.status,equals:employed
+302_employer_address_required,$.application.individuals.data[*].employment.employer.address,required,application.individuals.employment.employer.address,DEFAULT,ALL,$.application.individuals.data[*].employment.status,equals:employed
+303_income_required,$.application.individuals.data[*].employment.income,required,application.individuals.employment.income,DEFAULT,ALL,$.application.individuals.data[*].employment.status,equals:employed
+304_income_is_number,$.application.individuals.data[*].employment.income,is_number,application.individuals.employment.income,DEFAULT,ALL,$.application.individuals.data[*].employment.status,equals:employed

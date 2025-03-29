@@ -1,0 +1,27 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "number": 1,
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "",
+                  "last": "Smith"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "metadata": {
+        "requestId": "req123",
+        "createdAt": "2023-04-01"
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

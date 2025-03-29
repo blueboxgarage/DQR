@@ -1,0 +1,34 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "John",
+                  "last": "Doe"
+                }
+              }
+            ],
+            "contact": {
+              "email": "invalid-email",
+              "phone": "123-4567",
+              "alternate": {
+                "email": "johnd@work.com",
+                "phone": "not-valid-phone"
+              }
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "requestId": "ABC123",
+        "createdAt": "2023-01-01"
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

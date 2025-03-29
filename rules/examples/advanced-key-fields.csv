@@ -1,0 +1,4 @@
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition
+premium_security,$.user.security.mfa_enabled,equals:true,"user.profile.type",DEFAULT,ALL,$.user.profile.type,equals:premium
+contact_required,$.user.contact.phone,required,"user.profile.type",DEFAULT,ALL,$.user.profile.type,equals:premium
+email_format,$.user.contact.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$","user.profile.type,user.security.mfa_enabled,user.contact",DEFAULT,ALL,,

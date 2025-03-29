@@ -1,0 +1,42 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "number": 1,
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "",
+                  "last": ""
+                }
+              }
+            ],
+            "age": "thirty",
+            "contact": {
+              "email": "not-an-email",
+              "phone": 12345
+            },
+            "address": {
+              "street": "",
+              "city": null,
+              "zip": "ABCDEF",
+              "coordinates": "not-an-object"
+            },
+            "preferences": "not-an-array",
+            "active": "not-a-boolean",
+            "scores": [1, "two", 3],
+            "tags": ["tag1", "", "tag3"]
+          }
+        ]
+      },
+      "metadata": {
+        "createdAt": "123",
+        "requestId": "a"
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

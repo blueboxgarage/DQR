@@ -2,22 +2,25 @@
   "data": {
     "application": {
       "individuals": {
-        "number": 1,
         "data": [
           {
             "names": [
               {
                 "name": {
-                  "first": "",
-                  "last": "Smith"
+                  "first": "John",
+                  "last": "Doe"
                 }
               }
-            ]
+            ],
+            "emergency_contact": {
+              "name": "Jane Doe",
+              "phone": "555-1234"
+            }
           }
         ]
       }
     }
   },
-  "journey": "DEFAULT",
+  "journey": "ONBOARDING",
   "system": "ALL"
 }

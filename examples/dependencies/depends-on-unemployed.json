@@ -1,0 +1,38 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "John",
+                  "last": "Doe"
+                }
+              }
+            ],
+            "contact": {
+              "email": "john@example.com",
+              "phone": "555-1234"
+            },
+            "employment": {
+              "status": "unemployed",
+              "employer": {
+                "name": "",
+                "address": ""
+              },
+              "income": null
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "requestId": "ABC123",
+        "createdAt": "2023-01-01"
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

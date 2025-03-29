@@ -446,6 +446,7 @@ dependencies = [
  "env_logger",
  "jsonpath_lib",
  "log",
+ "regex",
  "serde",
  "serde_json",
  "tempfile",

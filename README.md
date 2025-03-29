@@ -22,8 +22,11 @@ DQR is a configurable JSON validation service that allows teams to update valida
   - `models.rs` - Data structures
   - `rules.rs` - Rule loading and management
   - `validation.rs` - Validation engine
-- `rules.csv` - Sample validation rules
-- `examples/` - Example JSON payloads for testing
+- `rules/` - Validation rule files in CSV format
+  - `default.csv` - Default validation rules
+  - `multiple-key-fields.csv` - Rules demonstrating multiple key fields
+  - `dependencies.csv` - Rules demonstrating conditional validation
+- `examples/` - Example JSON payloads and demonstration scripts
 
 ## Getting Started
 
@@ -46,7 +49,7 @@ DQR uses environment variables for configuration:
 
 - `DQR_HOST`: Host to bind the server to (default: 127.0.0.1)
 - `DQR_PORT`: Port to listen on (default: 8081)
-- `DQR_RULES_PATH`: Path to the CSV rules file (default: rules.csv)
+- `DQR_RULES_PATH`: Path to the CSV rules file (default: rules/default.csv)
 - `RUST_LOG`: Log level (default: info)
 
 ### Running the Server
@@ -58,7 +61,7 @@ cargo run
 Or with custom configuration:
 
 ```bash
-DQR_HOST=0.0.0.0 DQR_PORT=9000 DQR_RULES_PATH=/path/to/custom-rules.csv cargo run
+DQR_HOST=0.0.0.0 DQR_PORT=9000 DQR_RULES_PATH=rules/dependencies.csv cargo run
 ```
 
 ## Testing
@@ -85,12 +88,12 @@ cargo test
 
    Test validation with valid data:
    ```bash
-   curl -X POST -H "Content-Type: application/json" -d @examples/valid-request.json http://localhost:8081/api/validate
+   curl -X POST -H "Content-Type: application/json" -d @examples/basic/valid-request.json http://localhost:8081/api/validate
    ```
 
    Test validation with invalid data:
    ```bash
-   curl -X POST -H "Content-Type: application/json" -d @examples/invalid-request.json http://localhost:8081/api/validate
+   curl -X POST -H "Content-Type: application/json" -d @examples/basic/invalid-request.json http://localhost:8081/api/validate
    ```
 
    Or use the included test scripts in the test_cases directory:
@@ -195,7 +198,36 @@ rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER,,
 - `min_length:N` - String must have at least N characters
 - `max_length:N` - String must have at most N characters
 - `equals:VALUE` - Field must equal the specified value (string, number, boolean)
-- `regex:PATTERN` - String must match the regular expression (placeholder implementation)
+- `regex:PATTERN` - String must match the regular expression
+
+### Validation Approaches
+
+DQR supports three different approaches to validation, each with different levels of complexity:
+
+1. **Standard Rules**: Basic field validation without dependencies
+   ```csv
+   id,selector,condition,key_fields
+   email_format,$.user.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",user.email
+   ```
+
+2. **Dependent Rules**: Rules that only apply when another field meets a condition
+   ```csv
+   id,selector,condition,key_fields,depends_on_selector,depends_on_condition
+   shipping_address,$.order.shipping_address,required,order.shipping_address,$.order.delivery_method,equals:physical
+   ```
+
+3. **Conditional Rules (If/Then/Else)**: Branching logic for complex validation
+   ```csv
+   id,selector,condition,key_fields,logic_type,parent_rule_id
+   payment_type_check,$.payment.type,equals:credit_card,payment.type,if,
+   credit_card_rules,$.payment.credit_card.number,required,payment.credit_card.number,then,payment_type_check
+   bank_account_rules,$.payment.bank_account.routing,required,payment.bank_account.routing,else,payment_type_check
+   ```
+
+Choose the approach that best matches your validation needs:
+- Use **standard rules** for simple, independent validations
+- Use **dependent rules** when one field depends on another
+- Use **conditional rules** for complex branching logic
 
 ## Health Check
 
@@ -213,22 +245,53 @@ Response:
 
 ## Understanding Key Fields
 
-Key fields in the DQR system serve as an efficient indexing mechanism for validation rules:
+Key fields in the DQR system serve as an indexing and lookup mechanism for validation rules:
 
 1. **Purpose**: 
-   - They identify which fields in your JSON data a particular rule applies to
-   - They create a mapping that allows the system to quickly look up relevant rules when validating specific parts of your data
+   - They determine when a rule should be triggered in the validation process
+   - They create an efficient index for quickly finding relevant rules
+   - They enable a single rule to apply to multiple related fields
 
-2. **Implementation**:
-   - In the rule definition, key_fields are comma-separated strings (e.g., `application.individuals.names.name`)
-   - The system splits these into individual fields and creates a HashMap where each field points to applicable rules
-   - This creates an efficient index for rule retrieval
+2. **How They Work**:
+   - When rules are loaded, they're indexed by each of their key_fields
+   - During validation, the system looks up all rules that match the fields being validated
+   - A rule is applied when ANY of its key_fields matches data in the document
 
-3. **Example**:
-   If you have a rule with `key_fields: "name,email"`, it means this rule applies when validating either the name or email fields in your JSON data.
+3. **Relation to Selectors**:
+   - The `selector` determines WHAT the rule validates (the actual JSON path)
+   - The `key_fields` determine WHEN the rule is triggered (the indexing)
+   - These can be different, allowing flexible validation patterns
 
-4. **Performance Benefit**:
-   Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data structure, making validation more efficient.
+4. **Practical Examples**:
+
+   **Example 1: Single Key Field**
+   ```csv
+   id,selector,condition,key_fields
+   email_format,$.user.email,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",user.email
+   ```
+   This rule validates the email format and is only triggered when processing the user.email field.
+
+   **Example 2: Multiple Key Fields**
+   ```csv
+   id,selector,condition,key_fields
+   email_format,$.user.primaryEmail,"regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$","user.primaryEmail,user.secondaryEmail,user.workEmail"
+   ```
+   This rule is triggered when ANY of the three email fields is present, but only validates the primaryEmail (based on selector).
+
+   **Example 3: Different Selector and Key Fields**
+   ```csv
+   id,selector,condition,key_fields
+   contact_required,$.user.contactInfo,required,"user.type,user.role"
+   ```
+   This rule checks if contactInfo exists but is triggered when processing either user.type or user.role.
+
+5. **Multiple Key Fields Use Case**:
+   - Validate related fields with the same rule (all email fields use same validation)
+   - Create category-based rules (all address fields trigger address validation rules)
+   - Optimize rule organization (fewer rules to manage)
+
+6. **Performance Benefit**:
+   Instead of checking every rule against every field, the system can quickly retrieve only the rules that are relevant to the fields present in your data, making validation more efficient.
 
 ## Requirements for Rule Nesting and Dependencies
 
@@ -259,13 +322,37 @@ To support rule nesting and dependencies, the following changes would be needed:
    - Implement conditional rule execution based on parent rule results
    - Add proper error propagation for dependency failures
 
+## Examples
+
+The project includes organized examples demonstrating different features:
+
+- **Basic Validation**: Simple validation examples
+  ```bash
+  cargo run -- validate examples/basic/valid-request.json
+  cargo run -- validate examples/basic/invalid-request.json
+  ```
+
+- **Multiple Key Fields**: How a single rule can validate multiple related fields
+  ```bash
+  ./examples/multiple-key-fields/test-multiple-key-fields.sh
+  ```
+
+- **Dependent Validation**: Rules that only apply when certain conditions are met
+  ```bash
+  ./examples/dependencies/test-depends-on.sh
+  ```
+
+- **If/Then/Else Validation**: Branching validation logic based on data values
+  ```bash
+  ./examples/conditionals/test-conditionals.sh
+  ```
+
+For more details, see the [Examples README](examples/README.md).
+
 ## Future Enhancements
 
-- Add more validation conditions (regex, numeric ranges, enum values)
+- Add more validation conditions (numeric ranges, enum values, custom validators)
 - Add caching for improved performance
 - Support multiple rule sources (database, API)
 - Add admin interface for rule management
-- Support conditional validation rules (if/then/else)
 - Improve error messages with more context
-- Add journey-specific  handling and reporting
-- Support multiple languages for  messages

@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
         .parse::<u16>()
         .expect("Invalid port number");
     let rules_path = env::var("DQR_RULES_PATH")
-        .unwrap_or_else(|_| "rules.csv".to_string());
+        .unwrap_or_else(|_| "rules/default.csv".to_string());
     
     // Initialize rule repository and validation engine
     let mut rule_repository = RuleRepository::new();

@@ -1,0 +1,22 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "Jo",
+                  "last": "Doe"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "journey": "VALIDATION_CHECK",
+  "system": "ALL"
+}
