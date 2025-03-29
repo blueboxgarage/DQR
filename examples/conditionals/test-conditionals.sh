@@ -5,7 +5,7 @@ set -e
 cargo build
 
 # Define custom rules file
-RULES_FILE="rules/conditionals.csv"
+RULES_FILE="rules/examples/conditionals.csv"
 
 # Print rules information
 echo "=== TESTING CONDITIONAL VALIDATION RULES (IF/THEN/ELSE) ==="

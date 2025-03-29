@@ -5,7 +5,7 @@ set -e
 cargo build
 
 # Export environment variables for rules path
-export DQR_RULES_PATH=rules/advanced-key-fields.csv
+export DQR_RULES_PATH=rules/examples/advanced-key-fields.csv
 
 # Print rules information
 echo "=== ADVANCED KEY_FIELDS USAGE ==="

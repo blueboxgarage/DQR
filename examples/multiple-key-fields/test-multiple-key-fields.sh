@@ -5,7 +5,7 @@ set -e
 cargo build
 
 # Export environment variables for rules path
-export DQR_RULES_PATH=rules/multiple-key-fields.csv
+export DQR_RULES_PATH=rules/examples/multiple-key-fields.csv
 
 # Print rules information
 echo "=== RULES WITH MULTIPLE KEY_FIELDS ==="

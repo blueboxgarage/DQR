@@ -5,7 +5,7 @@ set -e
 cargo build
 
 # Define custom rules file
-RULES_FILE="rules/dependencies.csv"
+RULES_FILE="rules/examples/dependencies.csv"
 
 # Print rules information
 echo "=== CONDITIONAL VALIDATION WITH DEPENDS_ON ==="

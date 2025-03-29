@@ -4,10 +4,14 @@ This directory contains CSV files with validation rules for the DQR tool.
 
 ## Available Rule Files
 
-- `default.csv`: Standard validation rules for data quality
-- `multiple-key-fields.csv`: Example rules demonstrating multiple key fields functionality
-- `dependencies.csv`: Example rules demonstrating conditional validation with depends_on
-- `conditionals.csv`: Example rules demonstrating if/then/else conditional validation
+- `default.csv`: Standard validation rules for data quality (used by default)
+
+### Example Rules (in examples/ subdirectory)
+
+- `examples/multiple-key-fields.csv`: Example rules demonstrating multiple key fields functionality
+- `examples/dependencies.csv`: Example rules demonstrating conditional validation with depends_on
+- `examples/conditionals.csv`: Example rules demonstrating if/then/else conditional validation
+- `examples/advanced-key-fields.csv`: Example rules showing advanced key_fields patterns
 
 ## Rule Format
 
