@@ -9,7 +9,7 @@ cargo build
 set +e
 
 echo -e "\nTesting batch validation..."
-for file in examples/*.json; do
+for file in examples/basic/*.json; do
   echo -e "\nValidating $file..."
   cargo run -- validate "$file"
   echo "Exit code $?"

@@ -50,9 +50,26 @@ impl ValidationEngine {
         let mut errors = Vec::new();
         
         for rule in rules {
+            // Skip conditional branch rules here - they'll be processed by their parent
+            if rule.is_conditional_branch() {
+                continue;
+            }
+            
             // Apply the rule
-            if let Err(validation_errors) = self.apply_rule(json, &rule) {
-                errors.extend(validation_errors);
+            match self.apply_rule(json, &rule) {
+                Ok((condition_result, rule_errors)) => {
+                    // Add any errors from this rule
+                    errors.extend(rule_errors);
+                    
+                    // If this is a conditional root rule, process its branches
+                    if rule.is_condition_root() {
+                        let conditional_errors = self.process_conditional_rules(json, &rule.id, condition_result);
+                        errors.extend(conditional_errors);
+                    }
+                },
+                Err(e) => {
+                    log::error!("Error applying rule {}: {}", rule.id, e);
+                }
             }
         }
         
@@ -63,29 +80,82 @@ impl ValidationEngine {
         }
     }
     
-    fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(), Vec<ValidationError>> {
+    fn apply_rule(&self, json: &Value, rule: &ValidationRule) -> Result<(bool, Vec<ValidationError>), DqrError> {
+        // Check dependency condition first if it exists
+        if !rule.depends_on_selector.is_empty() && !rule.depends_on_condition.is_empty() {
+            // Apply the depends_on selector
+            let depends_selection = match jsonpath_lib::select(json, &rule.depends_on_selector) {
+                Ok(selection) => selection,
+                Err(_) => {
+                    // If we can't evaluate the dependency, skip this rule
+                    return Ok((true, Vec::new()));
+                }
+            };
+            
+            // Check if any selected value matches the dependency condition
+            let mut dependency_met = false;
+            for depends_value in depends_selection.iter() {
+                // Check the dependency condition
+                if rule.depends_on_condition.starts_with("equals:") {
+                    if let Some(expected_value) = rule.depends_on_condition.strip_prefix("equals:") {
+                        match depends_value {
+                            Value::String(s) => {
+                                if s == expected_value {
+                                    dependency_met = true;
+                                    break;
+                                }
+                            },
+                            Value::Number(n) => {
+                                if let Ok(num) = expected_value.parse::<f64>() {
+                                    if let Some(val_num) = n.as_f64() {
+                                        if (val_num - num).abs() < f64::EPSILON {
+                                            dependency_met = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            },
+                            Value::Bool(b) => {
+                                if let Ok(expected_bool) = expected_value.parse::<bool>() {
+                                    if *b == expected_bool {
+                                        dependency_met = true;
+                                        break;
+                                    }
+                                }
+                            },
+                            _ => {}
+                        }
+                    }
+                }
+                // Add more dependency condition types here if needed
+            }
+            
+            // If the dependency condition is not met, skip this rule
+            if !dependency_met {
+                return Ok((true, Vec::new()));
+            }
+        }
+        
         // Apply JSON path selector to find the values to validate
         let selection = jsonpath_lib::select(json, &rule.selector)
-            .map_err(|_| vec![ValidationError {
-                path: rule.selector.clone(),
-                rule_id: rule.id.clone(),
-            }])?;
+            .map_err(|_| DqrError::JsonPathError(format!("Invalid JSONPath: {}", rule.selector)))?;
         
         // If no values match and condition is required, that's an error
         if rule.condition == "required" && selection.is_empty() {
-            return Err(vec![ValidationError {
+            return Ok((false, vec![ValidationError {
                 path: rule.selector.clone(),
                 rule_id: rule.id.clone(),
-            }]);
+            }]));
         }
         
         // If selection is empty for non-required conditions, consider validation passed
         if selection.is_empty() && rule.condition != "required" {
-            return Ok(());
+            return Ok((true, Vec::new()));
         }
         
         // Process each condition
         let mut errors = Vec::new();
+        let mut condition_passed = true;
         
         for (idx, value) in selection.iter().enumerate() {
             let path = format!("{} (item {})", rule.selector, idx);
@@ -243,10 +313,50 @@ impl ValidationEngine {
             }
         }
         
-        if errors.is_empty() {
-            Ok(())
-        } else {
-            Err(errors)
+        // If there are errors, we consider the condition to have failed
+        if !errors.is_empty() {
+            condition_passed = false;
         }
+        
+        Ok((condition_passed, errors))
+    }
+    
+    // Process conditional branches based on the result of the "if" rule
+    fn process_conditional_rules(&self, json: &Value, parent_id: &str, condition_passed: bool) -> Vec<ValidationError> {
+        // Get the appropriate branch based on the condition result
+        let (then_rules, else_rules) = self.rule_repository.get_conditional_rules(parent_id);
+        let branch_to_process = if condition_passed { then_rules } else { else_rules };
+        
+        let mut all_errors = Vec::new();
+        
+        // Process all rules in the selected branch
+        for rule in branch_to_process {
+            // If this is another conditional root, process it recursively
+            if rule.is_condition_root() {
+                match self.apply_rule(json, &rule) {
+                    Ok((result, errors)) => {
+                        all_errors.extend(errors);
+                        // Process nested conditionals
+                        let nested_errors = self.process_conditional_rules(json, &rule.id, result);
+                        all_errors.extend(nested_errors);
+                    },
+                    Err(e) => {
+                        log::error!("Error processing conditional rule {}: {}", rule.id, e);
+                    }
+                }
+            } else {
+                // Process standard rule
+                match self.apply_rule(json, &rule) {
+                    Ok((_, errors)) => {
+                        all_errors.extend(errors);
+                    },
+                    Err(e) => {
+                        log::error!("Error processing rule {}: {}", rule.id, e);
+                    }
+                }
+            }
+        }
+        
+        all_errors
     }
 }

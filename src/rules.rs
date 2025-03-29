@@ -8,6 +8,7 @@ use crate::models::ValidationRule;
 #[derive(Clone)]
 pub struct RuleRepository {
     rules: HashMap<String, Vec<ValidationRule>>,
+    conditional_rules: HashMap<String, (Vec<ValidationRule>, Vec<ValidationRule>)>,
 }
 
 impl Default for RuleRepository {
@@ -20,6 +21,7 @@ impl RuleRepository {
     pub fn new() -> Self {
         RuleRepository {
             rules: HashMap::new(),
+            conditional_rules: HashMap::new(),
         }
     }
 
@@ -29,9 +31,36 @@ impl RuleRepository {
     ) -> Result<(), DqrError> {
         let file = File::open(path)?;
         let mut reader = csv::Reader::from_reader(file);
+        
+        // Temporary storage for conditional rules
+        let mut then_rules: HashMap<String, Vec<ValidationRule>> = HashMap::new();
+        let mut else_rules: HashMap<String, Vec<ValidationRule>> = HashMap::new();
 
         for result in reader.deserialize() {
             let rule: ValidationRule = result?;
+            
+            // Handle conditional rules specially
+            match rule.logic_type {
+                crate::models::ConditionalLogic::Then => {
+                    // Store "then" rules indexed by their parent rule ID
+                    then_rules
+                        .entry(rule.parent_rule_id.clone())
+                        .or_default()
+                        .push(rule);
+                    continue;
+                },
+                crate::models::ConditionalLogic::Else => {
+                    // Store "else" rules indexed by their parent rule ID
+                    else_rules
+                        .entry(rule.parent_rule_id.clone())
+                        .or_default()
+                        .push(rule);
+                    continue;
+                },
+                _ => {
+                    // Standard rules and "if" rules are processed normally
+                }
+            }
             
             // Split comma-separated key fields
             let key_fields: Vec<String> = if rule.key_fields.is_empty() {
@@ -50,6 +79,17 @@ impl RuleRepository {
                     .or_default()
                     .push(rule.clone());
             }
+        }
+        
+        // Now that we've processed all rules, organize the conditional rules
+        for (parent_id, then_branch) in then_rules {
+            let else_branch = else_rules.remove(&parent_id).unwrap_or_default();
+            self.conditional_rules.insert(parent_id, (then_branch, else_branch));
+        }
+        
+        // If there are any remaining else rules without matching then rules, add them too
+        for (parent_id, else_branch) in else_rules {
+            self.conditional_rules.insert(parent_id, (Vec::new(), else_branch));
         }
 
         Ok(())
@@ -100,5 +140,13 @@ impl RuleRepository {
         matched_rules.dedup_by(|a, b| a.id == b.id);
         
         matched_rules
+    }
+    
+    // Get the conditional branches (then/else) for a specific rule ID
+    pub fn get_conditional_rules(&self, parent_id: &str) -> (Vec<ValidationRule>, Vec<ValidationRule>) {
+        match self.conditional_rules.get(parent_id) {
+            Some((then_rules, else_rules)) => (then_rules.clone(), else_rules.clone()),
+            None => (Vec::new(), Vec::new())
+        }
     }
 }

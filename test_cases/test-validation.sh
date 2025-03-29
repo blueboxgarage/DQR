@@ -6,16 +6,16 @@ echo "Building DQR..."
 cargo build
 
 echo -e "\nTesting valid request..."
-cargo run -- validate examples/valid-request.json
+cargo run -- validate examples/basic/valid-request.json
 echo -e "\nExpected: No validation errors"
 
 echo -e "\nTesting invalid request..."
-cargo run -- validate examples/invalid-request.json
+cargo run -- validate examples/basic/invalid-request.json
 echo -e "\nExpected: First name is required (001_first_name_required) and First name must be at least 2 characters (002_idiv_00_frst_nm_lngth)"
 
 # Create and test a file with multiple potential validation failures
 echo -e "\nCreating test file with multiple potential validation failures..."
-cat > examples/test_multiple_validations.json << 'EOF'
+cat > examples/basic/test_multiple_validations.json << 'EOF'
 {
   "data": {
     "application": {
@@ -61,5 +61,5 @@ cat > examples/test_multiple_validations.json << 'EOF'
 EOF
 
 echo -e "\nTesting with multiple validation failures..."
-cargo run -- validate examples/test_multiple_validations.json
+cargo run -- validate examples/basic/test_multiple_validations.json
 echo -e "\nNote: This should now trigger all validation types (required, is_*, min/max_length, equals, regex)"
