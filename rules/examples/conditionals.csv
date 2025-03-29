@@ -1,6 +1,6 @@
 id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition,logic_type,parent_rule_id
 age_check,$.user.age,is_number,user.age,DEFAULT,ALL,,,if,
-age_adult,$.user.age,min_length:18,user.age,DEFAULT,ALL,,,then,age_check
+age_adult,$.user.age,min_value:18,user.age,DEFAULT,ALL,,,then,age_check
 age_minor,$.user.guardian.name,required,user.guardian.name,DEFAULT,ALL,,,else,age_check
 payment_type_check,$.payment.type,equals:credit_card,payment.type,DEFAULT,ALL,,,if,
 credit_card_rules,$.payment.credit_card.number,required,payment.credit_card.number,DEFAULT,ALL,,,then,payment_type_check

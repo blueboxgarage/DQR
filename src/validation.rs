@@ -278,6 +278,30 @@ impl ValidationEngine {
                         }
                     }
                 },
+                condition if condition.starts_with("min_value:") => {
+                    if let Some(min_value_str) = condition.strip_prefix("min_value:") {
+                        if let Ok(min_value) = min_value_str.parse::<f64>() {
+                            if !value.is_number() || value.as_f64().map_or(true, |v| v < min_value) {
+                                errors.push(ValidationError {
+                                    path: path.clone(),
+                                    rule_id: rule.id.clone(),
+                                });
+                            }
+                        }
+                    }
+                },
+                condition if condition.starts_with("max_value:") => {
+                    if let Some(max_value_str) = condition.strip_prefix("max_value:") {
+                        if let Ok(max_value) = max_value_str.parse::<f64>() {
+                            if !value.is_number() || value.as_f64().map_or(true, |v| v > max_value) {
+                                errors.push(ValidationError {
+                                    path: path.clone(),
+                                    rule_id: rule.id.clone(),
+                                });
+                            }
+                        }
+                    }
+                },
                 condition if condition.starts_with("equals:") => {
                     if let Some(expected_value) = condition.strip_prefix("equals:") {
                         let matches = match value {

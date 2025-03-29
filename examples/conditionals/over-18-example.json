@@ -1,0 +1,19 @@
+{
+  "data": {
+    "user": {
+      "age": 25,
+      "guardian": {
+      }
+    },
+    "payment": {
+      "type": "credit_card",
+      "credit_card": {
+        "number": "4111111111111111",
+        "expiry": "12/25",
+        "cvv": "123"
+      }
+    }
+  },
+  "journey": "DEFAULT",
+  "system": "ALL"
+}

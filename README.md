@@ -16,7 +16,7 @@ DQR is a configurable JSON validation service that allows teams to update valida
 
 - `src/` - Rust source code
   - `api.rs` - HTTP API implementation
-  - `.rs` -  handling
+  - `error.rs` - Error handling
   - `lib.rs` - Library exports
   - `main.rs` - Application entry point
   - `models.rs` - Data structures
@@ -24,9 +24,19 @@ DQR is a configurable JSON validation service that allows teams to update valida
   - `validation.rs` - Validation engine
 - `rules/` - Validation rule files in CSV format
   - `default.csv` - Default validation rules
-  - `multiple-key-fields.csv` - Rules demonstrating multiple key fields
-  - `dependencies.csv` - Rules demonstrating conditional validation
+  - `examples/` - Example rule configurations
+    - `advanced-key-fields.csv` - Rules demonstrating advanced key field usage
+    - `conditionals.csv` - Rules demonstrating conditional validation
+    - `dependencies.csv` - Rules demonstrating dependency-based validation
+    - `journey-specific.csv` - Rules for specific validation journeys
+    - `multiple-key-fields.csv` - Rules demonstrating multiple key fields
 - `examples/` - Example JSON payloads and demonstration scripts
+  - `basic/` - Simple validation examples
+  - `conditionals/` - If/Then/Else validation examples
+  - `dependencies/` - Dependent validation examples
+  - `journeys/` - Journey-specific validation examples
+  - `multiple-key-fields/` - Multiple key field validation examples
+- `test_cases/` - Test scripts for various validation scenarios
 
 ## Getting Started
 
@@ -197,6 +207,8 @@ rule2,$.age,is_number,age,"Age must be a number",DEFAULT,CUSTOMER,,
 - `is_object` - Field must be an object
 - `min_length:N` - String must have at least N characters
 - `max_length:N` - String must have at most N characters
+- `min_value:N` - Number must be greater than or equal to N
+- `max_value:N` - Number must be less than or equal to N
 - `equals:VALUE` - Field must equal the specified value (string, number, boolean)
 - `regex:PATTERN` - String must match the regular expression
 
