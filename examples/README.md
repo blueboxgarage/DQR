@@ -25,6 +25,13 @@ This directory contains example files and scripts demonstrating the different fe
   - `user-payment-example.json`: Sample data with user and payment information
   - `test-conditionals.sh`: Script to demonstrate if/then/else validation rules
 
+- `journeys/`: Examples for journey-specific validation
+  - `onboarding-complete.json`: Complete data for the onboarding journey
+  - `onboarding-empty-first.json`: Data with empty first name for onboarding
+  - `validation-check-complete.json`: Complete data for validation check journey
+  - `validation-check-incomplete.json`: Incomplete data for validation check
+  - `test-journey-validation.sh`: Script demonstrating journey-specific validation
+
 ## Running the Examples
 
 ### Basic Validation
@@ -63,3 +70,12 @@ This example demonstrates how rules can be conditionally applied based on the va
 ```
 
 This example shows how to use if/then/else branching logic to create sophisticated validation rules that follow different paths based on the data values.
+
+### Journey-Specific Validation
+
+```bash
+# Run the journey-specific validation example
+./examples/journeys/test-journey-validation.sh
+```
+
+This example demonstrates how to create different validation rules for different journeys (ONBOARDING vs VALIDATION_CHECK) and how to conditionally validate fields only when certain conditions are met.

@@ -8,6 +8,7 @@ This directory contains example rule files demonstrating different DQR validatio
 - `dependencies.csv`: Shows validation rules that only apply when certain conditions are met
 - `conditionals.csv`: Illustrates if/then/else branching logic for complex validation scenarios
 - `advanced-key-fields.csv`: Demonstrates advanced key_fields usage where selectors and key_fields are different
+- `journey-specific.csv`: Shows how to create different validation rules for different journeys and conditionally validate fields
 
 ## How to Use Example Rules
 

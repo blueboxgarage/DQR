@@ -1,0 +1,9 @@
+id,selector,condition,key_fields,journey,system,depends_on_selector,depends_on_condition,logic_type,parent_rule_id
+j001_first_name_required,$.application.individuals.data[*].names[*].name.first,required,application.individuals.names.name.first,ONBOARDING,ALL,,,standard,
+j002_first_name_length,$.application.individuals.data[*].names[*].name.first,min_length:2,application.individuals.names.name.first,ONBOARDING,ALL,$.application.individuals.data[*].names[*].name.first,not_empty,standard,
+j003_last_name_required,$.application.individuals.data[*].names[*].name.last,required,application.individuals.names.name.last,ONBOARDING,ALL,,,standard,
+j004_last_name_length,$.application.individuals.data[*].names[*].name.last,min_length:2,application.individuals.names.name.last,ONBOARDING,ALL,$.application.individuals.data[*].names[*].name.last,not_empty,standard,
+j005_name_validation_checker,$.application.individuals.data[*].names[*],required,application.individuals.names,VALIDATION_CHECK,ALL,,,if,
+j006_all_names_check,$.application.individuals.data[*].names[*].name,required,application.individuals.names.name,VALIDATION_CHECK,ALL,,,then,j005_name_validation_checker
+j007_all_names_length_check,$.application.individuals.data[*].names[*].name.first,min_length:3,application.individuals.names.name.first,VALIDATION_CHECK,ALL,,,else,j005_name_validation_checker
+j008_emergency_contact_check,$.application.individuals.data[*].emergency_contact,required,application.individuals.emergency_contact,VALIDATION_CHECK,ALL,,,else,j005_name_validation_checker

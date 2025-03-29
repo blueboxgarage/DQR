@@ -126,6 +126,36 @@ impl ValidationEngine {
                             _ => {}
                         }
                     }
+                } else if rule.depends_on_condition == "not_empty" {
+                    // Check if the value is not null and not an empty string
+                    match depends_value {
+                        Value::String(s) => {
+                            if !s.is_empty() {
+                                dependency_met = true;
+                                break;
+                            }
+                        },
+                        Value::Array(arr) => {
+                            if !arr.is_empty() {
+                                dependency_met = true;
+                                break;
+                            }
+                        },
+                        Value::Object(obj) => {
+                            if !obj.is_empty() {
+                                dependency_met = true;
+                                break;
+                            }
+                        },
+                        Value::Number(_) | Value::Bool(_) => {
+                            // Numbers and booleans are never empty
+                            dependency_met = true;
+                            break;
+                        },
+                        Value::Null => {
+                            // Null is considered empty
+                        }
+                    }
                 }
                 // Add more dependency condition types here if needed
             }

@@ -1,0 +1,26 @@
+{
+  "data": {
+    "application": {
+      "individuals": {
+        "data": [
+          {
+            "names": [
+              {
+                "name": {
+                  "first": "John",
+                  "last": "Doe"
+                }
+              }
+            ],
+            "emergency_contact": {
+              "name": "Jane Doe",
+              "phone": "555-1234"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "journey": "VALIDATION_CHECK",
+  "system": "ALL"
+}
