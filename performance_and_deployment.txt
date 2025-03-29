@@ -1,0 +1,100 @@
+# DQR Performance and Deployment Guide
+
+## Performance Expectations at Scale
+
+Based on the implementation, you can expect:
+
+1. **Request Throughput**:
+   - A single instance could likely handle 100-500 requests per second, depending on the complexity of validations and server hardware
+   - The caching system will significantly improve this for repeated requests (potentially 5-10x better performance for cached validations)
+
+2. **Latency**:
+   - First-time validations: 10-50ms per request (depends on validation complexity)
+   - Cached validations: 1-5ms per request
+   - As rule count grows, initial latency may increase linearly if rules aren't indexed well
+
+3. **Memory Usage**:
+   - Base memory: ~20-50MB for the application itself
+   - Cache memory: Will grow based on the number of unique validation patterns
+   - With no cache limits implemented yet, memory usage could grow unbounded with enough unique requests
+
+4. **Scaling Factors**:
+   - Rule complexity and count: More rules = slower validation
+   - Document size: Larger JSON documents take longer to validate
+   - Cache hit ratio: Higher cache hits = better performance
+   - Concurrent connections: Performance will degrade with very high concurrency
+
+## Docker Containerization
+
+Containerizing this application is recommended for several reasons:
+
+1. **Deployment Benefits**:
+   - Consistent environment across development, testing, and production
+   - Easy deployment to any container orchestration service (Kubernetes, ECS, etc.)
+   - Simple scaling by running multiple instances behind a load balancer
+
+2. **Implementation Steps**:
+   - Create a Dockerfile using Rust's official image as base
+   - Use multi-stage builds to minimize container size
+   - Expose the correct port (default 8081)
+   - Configure environment variables for customization
+
+3. **Example Dockerfile**:
+   ```dockerfile
+   # Build stage
+   FROM rust:1.70 as builder
+   WORKDIR /app
+   COPY . .
+   RUN cargo build --release
+
+   # Runtime stage
+   FROM debian:bullseye-slim
+   RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+   WORKDIR /app
+   COPY --from=builder /app/target/release/dqr .
+   COPY rules/ ./rules/
+   
+   # Set default environment variables
+   ENV DQR_HOST=0.0.0.0
+   ENV DQR_PORT=8081
+   ENV DQR_RULES_PATH=rules/default.csv
+   ENV RUST_LOG=info
+   
+   EXPOSE 8081
+   CMD ["./dqr"]
+   ```
+
+4. **Orchestration Considerations**:
+   - For high availability, run multiple replicas
+   - Consider using a shared cache (Redis) for coordinated caching across instances
+   - Use health checks via the `/health` endpoint
+   - Configure appropriate resource limits based on expected load
+
+5. **Production Enhancements**:
+   - Add monitoring/observability (Prometheus metrics would be good to add)
+   - Implement proper logging to a centralized system
+   - Use a reverse proxy (Nginx, Traefik) for SSL termination and rate limiting
+
+## Scaling Strategies
+
+As your validation needs grow, consider these scaling approaches:
+
+1. **Vertical Scaling**:
+   - Increase CPU and memory for each instance
+   - Most effective when cache hit ratio is high
+   - Simpler to manage than horizontal scaling
+
+2. **Horizontal Scaling**:
+   - Add more container instances behind a load balancer
+   - Requires shared caching implementation (Redis, Memcached)
+   - Better for handling high concurrent loads
+
+3. **Specialized Instances**:
+   - Deploy instances optimized for specific validation journeys
+   - Route requests based on journey/system parameters
+   - Allows for better cache utilization per instance
+
+4. **Future Optimizations**:
+   - Implement batch validation endpoints for higher throughput
+   - Add asynchronous validation for non-blocking operations
+   - Consider rule compilation to further improve performance
