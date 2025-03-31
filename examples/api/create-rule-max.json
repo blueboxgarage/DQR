@@ -1,0 +1,8 @@
+{
+  "field_path": "$.payment.amount",
+  "validation_type": "max",
+  "parameters": "10000",
+  "description": "Payment amount cannot exceed 10000",
+  "journey": "payment_processing",
+  "system": "checkout"
+}

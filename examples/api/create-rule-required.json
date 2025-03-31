@@ -1,0 +1,7 @@
+{
+  "field_path": "$.user.email",
+  "validation_type": "required",
+  "description": "User email is required",
+  "journey": "registration",
+  "system": "user-portal"
+}

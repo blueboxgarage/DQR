@@ -1,0 +1,8 @@
+{
+  "field_path": "$.user.password",
+  "validation_type": "length",
+  "parameters": "min=8,max=64",
+  "description": "Password must be between 8 and 64 characters",
+  "journey": "registration",
+  "system": "user-portal"
+}
