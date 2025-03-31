@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
 use crate::error::DqrError;
-use crate::models::{ValidationError, ValidationRule, ValidationResponse};
+use crate::models::{NewRuleRequest, RuleDisplay, ValidationError, ValidationRule, ValidationResponse};
 use crate::rules::RuleRepository;
 
 #[derive(Clone)]
@@ -21,6 +21,23 @@ impl ValidationEngine {
             rule_repository,
             validation_cache: HashMap::new(),
         }
+    }
+    
+    // Rule management methods
+    
+    // Get all rules for display
+    pub fn get_rules_for_display(&self) -> Vec<RuleDisplay> {
+        self.rule_repository.get_all_rules_for_display()
+    }
+    
+    // Create a new rule
+    pub fn create_rule(&mut self, req: &NewRuleRequest) -> Result<String, DqrError> {
+        self.rule_repository.create_rule(req)
+    }
+    
+    // Delete a rule
+    pub fn delete_rule(&mut self, rule_id: &str) -> Result<(), DqrError> {
+        self.rule_repository.delete_rule(rule_id)
     }
     
     // Helper method to calculate a hash for the validation inputs

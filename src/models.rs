@@ -9,6 +9,39 @@ pub struct ValidationRequest {
     pub system: String,
 }
 
+// API Response type for rule management endpoints
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiResponse<T> {
+    pub success: bool,
+    pub data: Option<T>,
+    pub error: Option<String>,
+}
+
+// Rule representation for frontend display
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RuleDisplay {
+    pub id: String,
+    pub field_path: String,
+    pub validation_type: String,
+    pub parameters: Option<String>,
+    pub description: Option<String>,
+    pub journey: String,
+    pub system: String,
+}
+
+// Request to create a new rule
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NewRuleRequest {
+    pub field_path: String,
+    pub validation_type: String,
+    pub parameters: Option<String>,
+    pub description: Option<String>,
+    #[serde(default = "default_journey")]
+    pub journey: String,
+    #[serde(default = "default_system")]
+    pub system: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResponse {
     pub valid: bool,
@@ -21,7 +54,7 @@ pub struct ValidationError {
     pub rule_id: String,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum ConditionalLogic {
     #[serde(rename = "if")]
     If,
@@ -39,7 +72,7 @@ impl Default for ConditionalLogic {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ValidationRule {
     pub id: String,
     pub selector: String,
