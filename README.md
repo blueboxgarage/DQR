@@ -1,16 +1,18 @@
 # DQR - JSON Validation API
 
-DQR is a configurable JSON validation service that allows teams to update validation rules without code changes.
+DQR is a configurable JSON validation backend service that allows teams to update validation rules without code changes. It provides a RESTful API for validating data and managing validation rules.
 
 ## Features
 
+- RESTful API for validation and rule management
 - Validate JSON payloads against configurable rules
 - Rule-based validation using JSON Path selectors
 - CSV configuration for easy rule management
-- Detailed  responses
+- Detailed validation responses with error paths
 - Efficient rule matching based on key fields
 - Journey-based validation for different processing paths
 - System-based filtering for multi-team usage
+- Performance-optimized with multi-level caching
 
 ## Project Structure
 
@@ -22,6 +24,7 @@ DQR is a configurable JSON validation service that allows teams to update valida
   - `models.rs` - Data structures
   - `rules.rs` - Rule loading and management
   - `validation.rs` - Validation engine
+  - `validation_test.rs` - Test cases for validation engine
 - `rules/` - Validation rule files in CSV format
   - `default.csv` - Default validation rules
   - `examples/` - Example rule configurations
@@ -141,9 +144,25 @@ cargo test
    ./test_cases/test-batch.sh
    ```
 
-## API Usage
+## API Reference
 
-### Validate JSON
+DQR provides a RESTful API for validation operations and rule management. All API endpoints return JSON responses.
+
+For more comprehensive API documentation with examples, see the [API Reference Documentation](examples/api/api-reference.md) and try the [API Usage Examples](examples/api/api-usage.sh).
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/validate` | Validate JSON data against configured rules |
+| GET | `/api/rules` | Get all validation rules |
+| POST | `/api/rules` | Create a new validation rule |
+| DELETE | `/api/rules/{id}` | Delete a rule by ID |
+| GET | `/health` | Check API health status and cache statistics |
+
+### 1. Validate JSON
+
+Validates a JSON payload against configured rules.
 
 ```
 POST /api/validate
@@ -171,13 +190,12 @@ Content-Type: application/json
 }
 ```
 
-The request includes two optional parameters:
+**Parameters:**
+- `data` (required): The JSON data to validate
+- `journey` (optional): The validation journey to use (default: "DEFAULT")
+- `system` (optional): The system identifier for rule filtering (default: "ALL")
 
-- `journey`: The validation journey to use (e.g., "DEFAULT", "FAST_CHECK", "ALL_CHECKS", "PAYMENT_FLOW")
-- `system`: The system identifier for rule filtering (e.g., "CUSTOMER", "INVENTORY", "CHECKOUT")
-
-### Response Format
-
+**Response:**
 ```json
 {
   "valid": true|false,
@@ -187,6 +205,108 @@ The request includes two optional parameters:
       "rule_id": "rule_id"
     }
   ]
+}
+```
+
+### 2. Get All Rules
+
+Retrieves all configured validation rules.
+
+```
+GET /api/rules
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "rule1",
+      "field_path": "$.name",
+      "validation_type": "required",
+      "parameters": null,
+      "description": "Name field is required",
+      "journey": "DEFAULT",
+      "system": "ALL"
+    },
+    ...
+  ],
+  "error": null
+}
+```
+
+### 3. Create Rule
+
+Creates a new validation rule.
+
+```
+POST /api/rules
+Content-Type: application/json
+
+{
+  "field_path": "$.name",
+  "validation_type": "required",
+  "parameters": null,
+  "description": "Name field is required",
+  "journey": "onboarding",
+  "system": "registration"
+}
+```
+
+**Parameters:**
+- `field_path` (required): JSON path to the field (e.g., "$.name")
+- `validation_type` (required): Type of validation (e.g., "required", "min_length")
+- `parameters` (optional): Additional parameters for the validation
+- `description` (optional): Human-readable description of the rule
+- `journey` (optional): Validation journey (default: "DEFAULT")
+- `system` (optional): System identifier (default: "ALL")
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": "generated-rule-id",
+  "error": null
+}
+```
+
+### 4. Delete Rule
+
+Deletes a validation rule by ID.
+
+```
+DELETE /api/rules/{id}
+```
+
+**Parameters:**
+- `id` (required): The unique identifier of the rule to delete
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": null,
+  "error": null
+}
+```
+
+### 5. Health Check
+
+Checks the API's health status and returns cache statistics.
+
+```
+GET /health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "cache_stats": {
+    "validation_cache_size": 12,
+    "journey_system_cache_size": 5
+  }
 }
 ```
 
@@ -270,19 +390,6 @@ Choose the approach that best matches your validation needs:
 - Use **dependent rules** when one field depends on another
 - Use **conditional rules** for complex branching logic
 
-## Health Check
-
-```
-GET /health
-```
-
-Response:
-
-```json
-{
-  "status": "healthy"
-}
-```
 
 ## Understanding Key Fields
 

@@ -1,0 +1,16 @@
+{
+  "data": {
+    "user": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "age": 30,
+      "password": "securePassword123"
+    },
+    "payment": {
+      "amount": 5000,
+      "currency": "USD"
+    }
+  },
+  "journey": "registration",
+  "system": "user-portal"
+}

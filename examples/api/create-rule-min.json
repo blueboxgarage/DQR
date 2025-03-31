@@ -1,0 +1,8 @@
+{
+  "field_path": "$.user.age",
+  "validation_type": "min",
+  "parameters": "18",
+  "description": "User must be at least 18 years old",
+  "journey": "age_verification",
+  "system": "ALL"
+}

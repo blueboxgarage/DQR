@@ -1,0 +1,8 @@
+{
+  "field_path": "$.payment.currency",
+  "validation_type": "enum",
+  "parameters": "USD,EUR,GBP,JPY,CAD",
+  "description": "Currency must be one of the supported currencies",
+  "journey": "payment_processing",
+  "system": "checkout"
+}

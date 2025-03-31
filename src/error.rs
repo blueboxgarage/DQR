@@ -22,4 +22,7 @@ pub enum DqrError {
 
     #[error("Validation error: {0}")]
     ValidationError(String),
+    
+    #[error("{0}")]
+    Generic(String),
 }

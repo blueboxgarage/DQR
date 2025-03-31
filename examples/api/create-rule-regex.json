@@ -1,0 +1,8 @@
+{
+  "field_path": "$.user.email",
+  "validation_type": "regex",
+  "parameters": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+  "description": "User email must be in valid format",
+  "journey": "registration",
+  "system": "user-portal"
+}
