@@ -40,6 +40,11 @@ impl ValidationEngine {
         self.rule_repository.delete_rule(rule_id)
     }
     
+    // Save rules to file
+    pub fn save_rules_to_file(&self) -> Result<(), DqrError> {
+        self.rule_repository.save_rules_to_file()
+    }
+    
     // Helper method to calculate a hash for the validation inputs
     fn calculate_hash(&self, json: &Value, journey: &str, system: &str) -> u64 {
         let mut hasher = DefaultHasher::new();

@@ -115,8 +115,16 @@ pub async fn create_rule(
         }
     };
     
+    // Create the rule in memory first
     match engine.create_rule(&req) {
         Ok(rule_id) => {
+            // Try to save rules to file, but don't fail the API call if this fails
+            if let Err(save_err) = engine.save_rules_to_file() {
+                // Log the error but continue
+                log::error!("Error saving rules to file: {}", save_err);
+            }
+            
+            // Return success even if saving to file failed, as the rule is in memory
             HttpResponse::Ok().json(ApiResponse {
                 success: true,
                 data: Some(rule_id),
@@ -157,6 +165,13 @@ pub async fn delete_rule(
     
     match engine.delete_rule(&rule_id) {
         Ok(_) => {
+            // Try to save rules to file, but don't fail the API call if this fails
+            if let Err(save_err) = engine.save_rules_to_file() {
+                // Log the error but continue
+                log::error!("Error saving rules to file: {}", save_err);
+            }
+            
+            // Return success even if saving to file failed, as the rule is deleted in memory
             HttpResponse::Ok().json(ApiResponse::<()> {
                 success: true,
                 data: None,
