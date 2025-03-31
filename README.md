@@ -390,19 +390,6 @@ Choose the approach that best matches your validation needs:
 - Use **dependent rules** when one field depends on another
 - Use **conditional rules** for complex branching logic
 
-## Health Check
-
-```
-GET /health
-```
-
-Response:
-
-```json
-{
-  "status": "healthy"
-}
-```
 
 ## Understanding Key Fields
 
